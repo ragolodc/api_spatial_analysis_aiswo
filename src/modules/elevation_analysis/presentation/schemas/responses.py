@@ -1,51 +1,31 @@
+"""Response schemas for elevation analysis OGC API Features."""
+
 from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel
 
 from src.modules.elevation_analysis.domain.entities import PointType
-
-
-# --- Input schemas ---
-
-class RunAnalysisInputs(BaseModel):
-    zone_id: UUID
-
-
-class RunAnalysisRequest(BaseModel):
-    inputs: RunAnalysisInputs
-
-
-class GenerateContoursInputs(BaseModel):
-    zone_id: UUID
-    interval_m: float = 50.0
-
-
-class GenerateContoursRequest(BaseModel):
-    inputs: GenerateContoursInputs
-
-
-# --- GeoJSON geometry schemas ---
-
-class PointGeometry(BaseModel):
-    type: Literal["Point"] = "Point"
-    coordinates: list[float]
-
-
-class MultiLineStringGeometry(BaseModel):
-    type: Literal["MultiLineString"] = "MultiLineString"
-    coordinates: list[list[list[float]]]
+from src.modules.elevation_analysis.presentation.schemas.geometries import (
+    MultiLineStringGeometry,
+    PointGeometry,
+)
 
 
 # --- OGC Feature response schemas ---
 
+
 class ElevationPointProperties(BaseModel):
+    """Properties of a characteristic elevation point."""
+
     point_type: PointType
     elevation_m: float
     analysis_id: UUID
 
 
 class ElevationPointFeature(BaseModel):
+    """GeoJSON Feature for a characteristic elevation point."""
+
     type: Literal["Feature"] = "Feature"
     id: str
     geometry: PointGeometry
@@ -53,6 +33,8 @@ class ElevationPointFeature(BaseModel):
 
 
 class AnalysisProperties(BaseModel):
+    """Properties of an elevation analysis."""
+
     zone_id: UUID
     provider: str
     resolution_m: float
@@ -60,6 +42,8 @@ class AnalysisProperties(BaseModel):
 
 
 class ElevationAnalysisFeature(BaseModel):
+    """GeoJSON Feature representing an elevation analysis with characteristic points."""
+
     type: Literal["Feature"] = "Feature"
     id: str
     geometry: Literal[None] = None
@@ -68,12 +52,16 @@ class ElevationAnalysisFeature(BaseModel):
 
 
 class ElevationAnalysisCollection(BaseModel):
+    """GeoJSON FeatureCollection of elevation analyses."""
+
     type: Literal["FeatureCollection"] = "FeatureCollection"
     features: list[ElevationAnalysisFeature]
     number_matched: int
 
 
 class ContourProperties(BaseModel):
+    """Properties of an elevation contour."""
+
     zone_id: UUID
     elevation_m: float
     interval_m: float
@@ -82,6 +70,8 @@ class ContourProperties(BaseModel):
 
 
 class ElevationContourFeature(BaseModel):
+    """GeoJSON Feature representing an elevation contour line."""
+
     type: Literal["Feature"] = "Feature"
     id: str
     geometry: MultiLineStringGeometry
@@ -89,6 +79,8 @@ class ElevationContourFeature(BaseModel):
 
 
 class ElevationContourCollection(BaseModel):
+    """GeoJSON FeatureCollection of elevation contours."""
+
     type: Literal["FeatureCollection"] = "FeatureCollection"
     features: list[ElevationContourFeature]
     number_matched: int

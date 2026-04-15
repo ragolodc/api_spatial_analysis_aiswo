@@ -1,19 +1,25 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from src.modules.elevation_analysis.application.use_cases import (
+from src.modules.elevation_analysis.application import (
     GenerateZoneContours,
-    GetZoneAnalyses,
     GetZoneContours,
+    ListZoneAnalyses,
     RunZoneElevationAnalysis,
 )
-from src.modules.elevation_analysis.domain.ports import ElevationAnalysisProvider
-from src.modules.elevation_analysis.infrastructure.persistence.repository import (
-    SQLAlchemyElevationAnalysisRepository,
-    SQLAlchemyElevationContourRepository,
+from src.modules.elevation_analysis.domain.exceptions import (
+    ContoursGenerationError,
+    DemNotAvailable,
+    ElevationAnalysisException,
+    ZoneNotFound,
 )
-from src.modules.elevation_analysis.infrastructure.providers.planetary_computer import (
-    PlanetaryComputerAnalysisProvider,
+from src.modules.elevation_analysis.infrastructure.factories import (
+    get_generate_zone_contours,
+    get_get_zone_contours,
+    get_list_zone_analyses,
+    get_run_zone_elevation_analysis,
 )
 from src.modules.elevation_analysis.presentation.schemas import (
     AnalysisProperties,
@@ -29,19 +35,15 @@ from src.modules.elevation_analysis.presentation.schemas import (
     PointGeometry,
     RunAnalysisRequest,
 )
-from src.modules.zones.infrastructure.persistence.repository import SQLAlchemyZoneRepository
 from src.shared.db.session import get_db
 
 router = APIRouter(tags=["Elevation Analysis"])
 
 
-def _get_provider() -> ElevationAnalysisProvider:
-    return PlanetaryComputerAnalysisProvider()
-
-
 # ---------------------------------------------------------------------------
 # OGC Processes — ejecutar análisis y generar curvas
 # ---------------------------------------------------------------------------
+
 
 @router.post(
     "/processes/zone-elevation-analysis/execution",
@@ -51,17 +53,16 @@ def _get_provider() -> ElevationAnalysisProvider:
 def run_zone_elevation_analysis(
     body: RunAnalysisRequest,
     db: Session = Depends(get_db),
-    provider: ElevationAnalysisProvider = Depends(_get_provider),
 ) -> ElevationAnalysisFeature:
-    zone_repo = SQLAlchemyZoneRepository(db)
-    analysis_repo = SQLAlchemyElevationAnalysisRepository(db)
-
     try:
-        analysis = RunZoneElevationAnalysis(provider, analysis_repo, zone_repo).execute(
-            zone_id=body.inputs.zone_id
-        )
-    except ValueError as exc:
+        command = get_run_zone_elevation_analysis(db)
+        analysis = command.execute(zone_id=body.inputs.zone_id)
+    except ZoneNotFound as exc:
         raise HTTPException(status_code=404, detail=str(exc))
+    except DemNotAvailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except ElevationAnalysisException as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
     return _analysis_to_feature(analysis)
 
@@ -74,18 +75,19 @@ def run_zone_elevation_analysis(
 def generate_zone_contours(
     body: GenerateContoursRequest,
     db: Session = Depends(get_db),
-    provider: ElevationAnalysisProvider = Depends(_get_provider),
 ) -> ElevationContourCollection:
-    zone_repo = SQLAlchemyZoneRepository(db)
-    contour_repo = SQLAlchemyElevationContourRepository(db)
-
     try:
-        contours = GenerateZoneContours(provider, contour_repo, zone_repo).execute(
+        command = get_generate_zone_contours(db)
+        contours = command.execute(
             zone_id=body.inputs.zone_id,
             interval_m=body.inputs.interval_m,
         )
-    except ValueError as exc:
+    except ZoneNotFound as exc:
         raise HTTPException(status_code=404, detail=str(exc))
+    except ContoursGenerationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except ElevationAnalysisException as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
     return _contours_to_collection(contours)
 
@@ -93,6 +95,7 @@ def generate_zone_contours(
 # ---------------------------------------------------------------------------
 # OGC Features — consultar resultados persistidos
 # ---------------------------------------------------------------------------
+
 
 @router.get(
     "/collections/zones/{zone_id}/analyses",
@@ -103,10 +106,8 @@ def list_zone_analyses(
     zone_id: str,
     db: Session = Depends(get_db),
 ) -> ElevationAnalysisCollection:
-    from uuid import UUID
-
-    analysis_repo = SQLAlchemyElevationAnalysisRepository(db)
-    analyses = GetZoneAnalyses(analysis_repo).execute(UUID(zone_id))
+    query = get_list_zone_analyses(db)
+    analyses = query.execute(UUID(zone_id))
 
     return ElevationAnalysisCollection(
         features=[_analysis_to_feature(a) for a in analyses],
@@ -123,10 +124,8 @@ def get_zone_contours(
     zone_id: str,
     db: Session = Depends(get_db),
 ) -> ElevationContourCollection:
-    from uuid import UUID
-
-    contour_repo = SQLAlchemyElevationContourRepository(db)
-    contours = GetZoneContours(contour_repo).execute(UUID(zone_id))
+    query = get_get_zone_contours(db)
+    contours = query.execute(UUID(zone_id))
 
     return _contours_to_collection(contours)
 

@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from src.modules.elevation.presentation.ogc_router import router as ogc_router
 from src.modules.elevation.presentation.router import router as elevation_router
 from src.shared.config.settings import settings
 
@@ -16,3 +17,4 @@ def health() -> dict[str, str]:
 
 
 app.include_router(elevation_router)
+app.include_router(ogc_router)

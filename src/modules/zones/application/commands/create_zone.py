@@ -1,11 +1,15 @@
+"""Command: Create a new zone."""
+
 from datetime import datetime, timezone
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from src.modules.zones.domain.entities import Zone, ZoneType
 from src.modules.zones.domain.ports import ZoneRepository
 
 
 class CreateZone:
+    """Command use case to create and persist a new zone."""
+
     def __init__(self, repository: ZoneRepository) -> None:
         self._repository = repository
 
@@ -18,19 +22,3 @@ class CreateZone:
             created_at=datetime.now(timezone.utc),
         )
         return self._repository.save(zone)
-
-
-class GetZone:
-    def __init__(self, repository: ZoneRepository) -> None:
-        self._repository = repository
-
-    def execute(self, zone_id: UUID) -> Zone | None:
-        return self._repository.find_by_id(zone_id)
-
-
-class ListZones:
-    def __init__(self, repository: ZoneRepository) -> None:
-        self._repository = repository
-
-    def execute(self) -> list[Zone]:
-        return self._repository.find_all()

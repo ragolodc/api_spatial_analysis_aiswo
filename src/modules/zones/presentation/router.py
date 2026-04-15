@@ -1,11 +1,9 @@
-from uuid import UUID
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from src.modules.zones.application.use_cases import CreateZone, GetZone, ListZones
+from src.modules.zones.application import CreateZone, ListZones
 from src.modules.zones.domain.entities import Zone
-from src.modules.zones.infrastructure.persistence.repository import SQLAlchemyZoneRepository
+from src.modules.zones.infrastructure.factories import get_create_zone, get_list_zones
 from src.modules.zones.presentation.schemas import (
     CreateZoneRequest,
     PolygonGeometry,
@@ -33,14 +31,14 @@ def _to_feature(zone: Zone) -> ZoneFeature:
 
 @router.get("/items", response_model=ZoneFeatureCollection)
 def list_zones(db: Session = Depends(get_db)) -> ZoneFeatureCollection:
-    zones = ListZones(SQLAlchemyZoneRepository(db)).execute()
+    zones = get_list_zones(db).execute()
     features = [_to_feature(z) for z in zones]
     return ZoneFeatureCollection(features=features, number_matched=len(features))
 
 
 @router.post("/items", response_model=ZoneFeature, status_code=201)
 def create_zone(body: CreateZoneRequest, db: Session = Depends(get_db)) -> ZoneFeature:
-    zone = CreateZone(SQLAlchemyZoneRepository(db)).execute(
+    zone = get_create_zone(db).execute(
         name=body.name,
         zone_type=body.zone_type,
         geometry=body.geometry.model_dump(),

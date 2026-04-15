@@ -5,22 +5,25 @@ import rioxarray  # noqa: F401  — registers .rio accessor on xarray DataArray
 from rioxarray.merge import merge_arrays
 
 from src.modules.elevation.domain.exceptions import ElevationDataNotFound
-from src.modules.elevation.domain.value_objects import Elevation, GeoPoint, GeoPolygon
+from src.modules.elevation.domain.value_objects import Elevation, GeoPoint
+from src.shared.domain import GeoPolygon
 
-_CATALOG_URL = "https://planetarycomputer.microsoft.com/api/stac/v1"
-_COLLECTION = "cop-dem-glo-30"
 _ASSET_KEY = "data"
 
 
 class PlanetaryComputerElevationProvider:
 
+    def __init__(self, catalog_url: str, collection: str) -> None:
+        self._catalog_url = catalog_url
+        self._collection = collection
+
     def _find_items(self, geometry: dict) -> list:
         catalog = pystac_client.Client.open(
-            _CATALOG_URL, modifier=planetary_computer.sign_inplace
+            self._catalog_url, modifier=planetary_computer.sign_inplace
         )
         items = list(
             catalog.search(
-                collections=[_COLLECTION], intersects=geometry, max_items=16
+                collections=[self._collection], intersects=geometry, max_items=16
             ).items()
         )
         if not items:

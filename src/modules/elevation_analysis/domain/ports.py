@@ -1,7 +1,7 @@
 from typing import Protocol
 from uuid import UUID
 
-from src.modules.elevation.domain.value_objects import GeoPolygon
+from src.shared.domain import GeoPolygon
 from src.modules.elevation_analysis.domain.entities import (
     ElevationAnalysis,
     ElevationContour,
@@ -10,6 +10,12 @@ from src.modules.elevation_analysis.domain.entities import (
 
 
 class ElevationAnalysisProvider(Protocol):
+    @property
+    def name(self) -> str: ...
+
+    @property
+    def resolution_m(self) -> float: ...
+
     def get_characteristic_points(
         self, polygon: GeoPolygon
     ) -> list[tuple[PointType, float, float, float]]:
@@ -33,3 +39,9 @@ class ElevationContourRepository(Protocol):
     def save_all(self, contours: list[ElevationContour]) -> list[ElevationContour]: ...
     def find_by_zone(self, zone_id: UUID) -> list[ElevationContour]: ...
     def delete_by_zone(self, zone_id: UUID) -> None: ...
+
+
+class ZoneGeometryReader(Protocol):
+    """Narrow read port: get zone geometry without coupling to the zones module."""
+
+    def find_polygon(self, zone_id: UUID) -> GeoPolygon | None: ...

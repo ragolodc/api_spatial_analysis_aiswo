@@ -1,10 +1,16 @@
 from fastapi import FastAPI
 
-from src.modules.elevation.presentation.ogc_router import router as ogc_router
-from src.modules.elevation.presentation.router import router as elevation_router
-from src.modules.elevation_analysis.presentation.router import router as elevation_analysis_router
-from src.modules.zones.presentation.router import router as zones_router
-from src.shared.config.settings import settings
+from src.modules.elevation.presentation.processes_router import router as elevation_processes_router
+from src.modules.elevation.presentation.sources_router import router as elevation_sources_router
+from src.modules.elevation_analysis.presentation.features_router import (
+    router as elevation_analysis_features_router,
+)
+from src.modules.elevation_analysis.presentation.processes_router import (
+    router as elevation_analysis_processes_router,
+)
+from src.modules.zones.presentation.features_router import router as zones_features_router
+from src.shared.config import settings
+from src.shared.presentation.ogc_landing_router import router as ogc_landing_router
 
 app = FastAPI(
     title=settings.app_name,
@@ -18,7 +24,9 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-app.include_router(elevation_router)
-app.include_router(ogc_router)
-app.include_router(zones_router)
-app.include_router(elevation_analysis_router)
+app.include_router(ogc_landing_router)
+app.include_router(zones_features_router)
+app.include_router(elevation_sources_router)
+app.include_router(elevation_analysis_features_router)
+app.include_router(elevation_analysis_processes_router)
+app.include_router(elevation_processes_router)

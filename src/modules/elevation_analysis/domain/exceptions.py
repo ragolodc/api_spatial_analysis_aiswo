@@ -17,9 +17,3 @@ class DemNotAvailable(ElevationAnalysisException):
     """Raised when DEM data is not available for given geometry."""
 
     pass
-
-
-class ContoursGenerationError(ElevationAnalysisException):
-    """Raised when contour generation fails."""
-
-    pass

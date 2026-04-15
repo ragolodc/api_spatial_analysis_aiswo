@@ -1,7 +1,8 @@
 """Query: Get highest point in polygon."""
 
 from src.modules.elevation.domain.ports import ElevationProvider
-from src.modules.elevation.domain.value_objects import Elevation, GeoPoint, GeoPolygon
+from src.modules.elevation.domain.value_objects import Elevation, GeoPoint
+from src.shared.domain import GeoPolygon
 
 
 class GetHighestPointInPolygon:

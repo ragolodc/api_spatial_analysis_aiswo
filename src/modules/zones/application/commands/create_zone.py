@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from src.modules.zones.domain.entities import Zone, ZoneType
 from src.modules.zones.domain.ports import ZoneRepository
+from src.shared.domain import GeoPolygon
 
 
 class CreateZone:
@@ -13,7 +14,7 @@ class CreateZone:
     def __init__(self, repository: ZoneRepository) -> None:
         self._repository = repository
 
-    def execute(self, name: str, zone_type: ZoneType, geometry: dict) -> Zone:
+    def execute(self, name: str, zone_type: ZoneType, geometry: GeoPolygon) -> Zone:
         zone = Zone(
             id=uuid4(),
             name=name,

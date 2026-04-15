@@ -3,6 +3,8 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID
 
+from src.shared.domain import GeoMultiLineString
+
 
 class PointType(StrEnum):
     HIGHEST = "highest"
@@ -43,5 +45,5 @@ class ElevationContour:
     provider: str
     interval_m: float
     elevation_m: float
-    geometry: dict  # GeoJSON MultiLineString
+    geometry: GeoMultiLineString  # GeoJSON MultiLineString
     generated_at: datetime

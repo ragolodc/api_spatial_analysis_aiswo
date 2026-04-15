@@ -5,10 +5,13 @@ from shapely.geometry import mapping, shape
 from sqlalchemy.orm import Session
 
 from src.modules.zones.domain.entities import Zone
+from src.modules.zones.domain.ports import ZoneRepository
 from src.modules.zones.infrastructure.persistence.models import ZoneModel
+from src.shared.domain import GeoPolygon
 
 
-class SQLAlchemyZoneRepository:
+class SQLAlchemyZoneRepository(ZoneRepository):
+    """SQLAlchemy implementation of ZoneRepository."""
     def __init__(self, db: Session) -> None:
         self._db = db
 
@@ -17,7 +20,7 @@ class SQLAlchemyZoneRepository:
             id=zone.id,
             name=zone.name,
             zone_type=zone.zone_type,
-            geometry=from_shape(shape(zone.geometry), srid=4326),
+            geometry=from_shape(shape(zone.geometry.to_geojson()), srid=4326),
             created_at=zone.created_at,
         )
         self._db.add(model)
@@ -38,6 +41,6 @@ class SQLAlchemyZoneRepository:
             id=model.id,
             name=model.name,
             zone_type=model.zone_type,
-            geometry=mapping(to_shape(model.geometry)),
+            geometry=GeoPolygon(coordinates=mapping(to_shape(model.geometry))["coordinates"]),
             created_at=model.created_at,
         )

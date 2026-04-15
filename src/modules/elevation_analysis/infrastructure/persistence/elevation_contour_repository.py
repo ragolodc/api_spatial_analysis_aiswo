@@ -11,6 +11,7 @@ from src.modules.elevation_analysis.domain.ports import ElevationContourReposito
 from src.modules.elevation_analysis.infrastructure.persistence.models import (
     ElevationContourModel,
 )
+from src.shared.domain import GeoMultiLineString
 
 
 class SQLAlchemyElevationContourRepository(ElevationContourRepository):
@@ -28,7 +29,7 @@ class SQLAlchemyElevationContourRepository(ElevationContourRepository):
                 provider=c.provider,
                 interval_m=c.interval_m,
                 elevation_m=c.elevation_m,
-                geometry=from_shape(shape(c.geometry), srid=4326),
+                geometry=from_shape(shape(c.geometry.to_geojson()), srid=4326),
                 generated_at=c.generated_at,
             )
             for c in contours
@@ -62,6 +63,6 @@ class SQLAlchemyElevationContourRepository(ElevationContourRepository):
             provider=model.provider,
             interval_m=model.interval_m,
             elevation_m=model.elevation_m,
-            geometry=mapping(to_shape(model.geometry)),
+            geometry=GeoMultiLineString(coordinates=mapping(to_shape(model.geometry))["coordinates"]),
             generated_at=model.generated_at,
         )

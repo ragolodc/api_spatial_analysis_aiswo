@@ -1,5 +1,6 @@
 """Dependency injection factories for elevation analysis module."""
 
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from src.modules.elevation_analysis.application.commands import (
@@ -10,45 +11,57 @@ from src.modules.elevation_analysis.application.queries import (
     GetZoneContours,
     ListZoneAnalyses,
 )
-from src.modules.elevation_analysis.infrastructure.providers import get_dem_provider
 from src.modules.elevation_analysis.infrastructure.persistence import (
     SQLAlchemyElevationAnalysisRepository,
     SQLAlchemyElevationContourRepository,
 )
-from src.modules.zones.infrastructure.persistence.zone_repository import (
-    SQLAlchemyZoneRepository,
+from src.modules.elevation_analysis.infrastructure.providers import (
+    PlanetaryComputerAnalysisProvider,
 )
+from src.modules.zones.infrastructure.zone_geometry_adapter import SQLAlchemyZoneGeometryAdapter
+from src.modules.elevation.infrastructure.persistence import SQLAlchemyElevationSourceRepository
 
 
-def get_zone_repository(db: Session):
-    """Factory for zone repository."""
-    return SQLAlchemyZoneRepository(db)
+def get_dem_provider(db: Session) -> PlanetaryComputerAnalysisProvider:
+    """Resolve the active elevation source from DB and build the DEM provider."""
+    repo = SQLAlchemyElevationSourceRepository(db)
+    source = repo.find_active()
+    if source is None:
+        raise HTTPException(status_code=503, detail="No active elevation source configured")
+    if not source.source_url or not source.collection:
+        raise HTTPException(status_code=503, detail="Active elevation source is missing catalog_url or collection")
+    return PlanetaryComputerAnalysisProvider(
+        catalog_url=source.source_url,
+        collection=source.collection,
+    )
 
 
-def get_analysis_repository(db: Session):
+def get_analysis_repository(db: Session) -> SQLAlchemyElevationAnalysisRepository:
     """Factory for elevation analysis repository."""
     return SQLAlchemyElevationAnalysisRepository(db)
 
 
-def get_contour_repository(db: Session):
+def get_contour_repository(db: Session) -> SQLAlchemyElevationContourRepository:
     """Factory for elevation contour repository."""
     return SQLAlchemyElevationContourRepository(db)
 
 
 def get_run_zone_elevation_analysis(db: Session) -> RunZoneElevationAnalysis:
     """Factory for RunZoneElevationAnalysis command."""
-    provider = get_dem_provider()
-    analysis_repo = get_analysis_repository(db)
-    zone_repo = get_zone_repository(db)
-    return RunZoneElevationAnalysis(provider, analysis_repo, zone_repo)
+    return RunZoneElevationAnalysis(
+        provider=get_dem_provider(db),
+        analysis_repo=get_analysis_repository(db),
+        zone_reader=SQLAlchemyZoneGeometryAdapter(db),
+    )
 
 
 def get_generate_zone_contours(db: Session) -> GenerateZoneContours:
     """Factory for GenerateZoneContours command."""
-    provider = get_dem_provider()
-    contour_repo = get_contour_repository(db)
-    zone_repo = get_zone_repository(db)
-    return GenerateZoneContours(provider, contour_repo, zone_repo)
+    return GenerateZoneContours(
+        provider=get_dem_provider(db),
+        contour_repo=get_contour_repository(db),
+        zone_reader=SQLAlchemyZoneGeometryAdapter(db),
+    )
 
 
 def get_list_zone_analyses(db: Session) -> ListZoneAnalyses:

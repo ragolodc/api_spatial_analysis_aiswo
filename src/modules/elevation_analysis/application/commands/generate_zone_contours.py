@@ -3,17 +3,16 @@
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from src.modules.elevation.domain.value_objects import GeoPolygon
 from src.modules.elevation_analysis.domain.entities import ElevationContour
 from src.modules.elevation_analysis.domain.exceptions import (
-    ContoursGenerationError,
     ZoneNotFound,
 )
 from src.modules.elevation_analysis.domain.ports import (
     ElevationAnalysisProvider,
     ElevationContourRepository,
+    ZoneGeometryReader,
 )
-from src.modules.zones.domain.ports import ZoneRepository
+from src.shared.domain import GeoMultiLineString
 
 
 class GenerateZoneContours:
@@ -28,17 +27,16 @@ class GenerateZoneContours:
         self,
         provider: ElevationAnalysisProvider,
         contour_repo: ElevationContourRepository,
-        zone_repo: ZoneRepository,
+        zone_reader: ZoneGeometryReader,
     ) -> None:
         self._provider = provider
         self._contour_repo = contour_repo
-        self._zone_repo = zone_repo
+        self._zone_reader = zone_reader
 
     def execute(
         self,
         zone_id: UUID,
         interval_m: float = 50.0,
-        provider_name: str = "planetary_computer",
     ) -> list[ElevationContour]:
         """
         Execute the contour generation command.
@@ -55,25 +53,21 @@ class GenerateZoneContours:
             ZoneNotFound: If zone does not exist
             ContoursGenerationError: If contour generation fails
         """
-        zone = self._zone_repo.find_by_id(zone_id)
-        if not zone:
+        polygon = self._zone_reader.find_polygon(zone_id)
+        if not polygon:
             raise ZoneNotFound(f"Zone {zone_id} not found")
 
-        try:
-            polygon = GeoPolygon(coordinates=zone.geometry["coordinates"])
-            raw_contours = self._provider.get_contours(polygon, interval_m)
-        except Exception as exc:
-            raise ContoursGenerationError(f"Failed to generate contours: {exc}")
+        raw_contours = self._provider.get_contours(polygon, interval_m)
 
         now = datetime.now(timezone.utc)
         contours = [
             ElevationContour(
                 id=uuid4(),
                 zone_id=zone_id,
-                provider=provider_name,
+                provider=self._provider.name,
                 interval_m=interval_m,
                 elevation_m=elev,
-                geometry=geojson,
+                geometry=GeoMultiLineString(coordinates=geojson["coordinates"]),
                 generated_at=now,
             )
             for elev, geojson in raw_contours

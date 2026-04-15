@@ -3,20 +3,18 @@
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from src.modules.elevation.domain.value_objects import GeoPolygon
 from src.modules.elevation_analysis.domain.entities import (
     ElevationAnalysis,
     ElevationPoint,
 )
 from src.modules.elevation_analysis.domain.exceptions import (
-    DemNotAvailable,
     ZoneNotFound,
 )
 from src.modules.elevation_analysis.domain.ports import (
     ElevationAnalysisProvider,
     ElevationAnalysisRepository,
+    ZoneGeometryReader,
 )
-from src.modules.zones.domain.ports import ZoneRepository
 
 
 class RunZoneElevationAnalysis:
@@ -31,16 +29,15 @@ class RunZoneElevationAnalysis:
         self,
         provider: ElevationAnalysisProvider,
         analysis_repo: ElevationAnalysisRepository,
-        zone_repo: ZoneRepository,
+        zone_reader: ZoneGeometryReader,
     ) -> None:
         self._provider = provider
         self._analysis_repo = analysis_repo
-        self._zone_repo = zone_repo
+        self._zone_reader = zone_reader
 
     def execute(
         self,
         zone_id: UUID,
-        provider_name: str = "planetary_computer",
     ) -> ElevationAnalysis:
         """
         Execute the analysis command.
@@ -56,15 +53,11 @@ class RunZoneElevationAnalysis:
             ZoneNotFound: If zone does not exist
             DemNotAvailable: If DEM data not available for zone
         """
-        zone = self._zone_repo.find_by_id(zone_id)
-        if not zone:
+        polygon = self._zone_reader.find_polygon(zone_id)
+        if not polygon:
             raise ZoneNotFound(f"Zone {zone_id} not found")
 
-        try:
-            polygon = GeoPolygon(coordinates=zone.geometry["coordinates"])
-            raw_points = self._provider.get_characteristic_points(polygon)
-        except Exception as exc:
-            raise DemNotAvailable(f"DEM not available for zone: {exc}")
+        raw_points = self._provider.get_characteristic_points(polygon)
 
         analysis_id = uuid4()
         points = [
@@ -82,8 +75,8 @@ class RunZoneElevationAnalysis:
         analysis = ElevationAnalysis(
             id=analysis_id,
             zone_id=zone_id,
-            provider=provider_name,
-            resolution_m=30.0,
+            provider=self._provider.name,
+            resolution_m=self._provider.resolution_m,
             analyzed_at=datetime.now(timezone.utc),
             points=points,
         )

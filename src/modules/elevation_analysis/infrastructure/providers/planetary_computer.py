@@ -6,12 +6,10 @@ from contourpy import contour_generator
 from rioxarray.merge import merge_arrays
 from shapely.geometry import MultiLineString, mapping, shape
 
-from src.modules.elevation.domain.exceptions import ElevationDataNotFound
-from src.modules.elevation.domain.value_objects import GeoPolygon
 from src.modules.elevation_analysis.domain.entities import PointType
+from src.modules.elevation_analysis.domain.exceptions import DemNotAvailable
+from src.shared.domain import GeoPolygon
 
-_CATALOG_URL = "https://planetarycomputer.microsoft.com/api/stac/v1"
-_COLLECTION = "cop-dem-glo-30"
 _ASSET_KEY = "data"
 
 
@@ -21,19 +19,31 @@ class PlanetaryComputerAnalysisProvider:
     desde Microsoft Planetary Computer.
     """
 
+    def __init__(self, catalog_url: str, collection: str) -> None:
+        self._catalog_url = catalog_url
+        self._collection = collection
+
+    @property
+    def name(self) -> str:
+        return "planetary_computer"
+
+    @property
+    def resolution_m(self) -> float:
+        return 30.0
+
     def _fetch_clipped_dem(self, polygon: GeoPolygon):
         """Descarga y recorta los tiles DEM que cubren el polígono."""
         geojson = polygon.to_geojson()
         catalog = pystac_client.Client.open(
-            _CATALOG_URL, modifier=planetary_computer.sign_inplace
+            self._catalog_url, modifier=planetary_computer.sign_inplace
         )
         items = list(
             catalog.search(
-                collections=[_COLLECTION], intersects=geojson, max_items=16
+                collections=[self._collection], intersects=geojson, max_items=16
             ).items()
         )
         if not items:
-            raise ElevationDataNotFound("No DEM coverage found for the given geometry")
+            raise DemNotAvailable("No DEM coverage found for the given geometry")
 
         tiles = [
             rioxarray.open_rasterio(item.assets[_ASSET_KEY].href, masked=True, lock=False)

@@ -6,14 +6,24 @@ Configuracion inicial para una API de analisis espacial con:
 - PostgreSQL + PostGIS
 - Alembic
 - Docker Compose
-- Estructura base DDD (vertical slice `elevation`)
+- DDD + Vertical Slices (`zones`, `elevation`, `elevation_analysis`) + `shared`
 
 ## Estructura
 
 ```text
 src/
   modules/
+    zones/
+      domain/
+      application/
+      infrastructure/
+      presentation/
     elevation/
+      domain/
+      application/
+      infrastructure/
+      presentation/
+    elevation_analysis/
       domain/
       application/
       infrastructure/
@@ -21,6 +31,8 @@ src/
   shared/
     config/
     db/
+    domain/
+    presentation/
 alembic/
 ```
 
@@ -41,7 +53,11 @@ docker compose exec api alembic upgrade head
 3. Probar API:
 
 - Health: `GET http://localhost:8000/health`
-- Elevation sources: `GET http://localhost:8000/elevation/sources`
+- Landing OGC: `GET http://localhost:8000/`
+- Collections: `GET http://localhost:8000/collections`
+- Processes: `GET http://localhost:8000/processes`
+- Zones items: `GET http://localhost:8000/collections/zones/items`
+- Elevation sources: `GET http://localhost:8000/elevation-sources`
 
 ## Notas sobre rasters (recomendacion inicial)
 

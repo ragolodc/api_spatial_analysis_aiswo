@@ -10,3 +10,4 @@ rioxarray>=0.17.0
 rasterio>=1.3.0
 shapely>=2.0.0
 numpy>=1.26.0
+contourpy>=1.2.0

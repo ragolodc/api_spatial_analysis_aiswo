@@ -1,4 +1,5 @@
-from typing import Literal
+from typing import Literal, Optional
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -14,7 +15,8 @@ class PointGeometry(BaseModel):
 
 
 class HighestPointInputs(BaseModel):
-    polygon: PolygonGeometry
+    polygon: Optional[PolygonGeometry] = None
+    zone_id: Optional[UUID] = None
 
 
 class HighestPointRequest(BaseModel):

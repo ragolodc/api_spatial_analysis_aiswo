@@ -44,14 +44,13 @@ class GenerateZoneContours:
         Args:
             zone_id: UUID of the zone
             interval_m: Elevation interval between contours (meters)
-            provider_name: Name of the DEM provider
 
         Returns:
             List of persisted ElevationContour entities
 
         Raises:
             ZoneNotFound: If zone does not exist
-            ContoursGenerationError: If contour generation fails
+            DemNotAvailable: If DEM data not available for zone
         """
         polygon = self._zone_reader.find_polygon(zone_id)
         if not polygon:

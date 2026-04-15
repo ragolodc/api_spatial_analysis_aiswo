@@ -44,7 +44,6 @@ class RunZoneElevationAnalysis:
 
         Args:
             zone_id: UUID of the zone to analyze
-            provider_name: Name of the DEM provider
 
         Returns:
             Persisted ElevationAnalysis with characteristic points

@@ -11,20 +11,24 @@ from src.modules.profile_analysis.domain.entities import (
 	ProfileAnalysisJobRequest,
 	ProfileAnalysisJobStatus,
 	ProfileAnalysisResult,
+	ProfilePointRow,
 	ProfileSamplePoint,
+	ProfileSummaryEntry,
+	ProfileType,
 	TransverseProfile,
 )
 from src.modules.profile_analysis.domain.ports import (
-	ProfileElevationProvider,
 	ProfileAnalysisJobDispatcher,
 	ProfileAnalysisJobRepository,
 	ProfileAnalysisPointWarehouse,
+	ProfileElevationProvider,
 )
 
 __all__ = [
 	"ProfileAnalysisException",
 	"DemNotAvailable",
 	"PivotKind",
+	"ProfileType",
 	"ProfileAnalysisAnalytics",
 	"ProfileAnalysisInput",
 	"ProfileSamplePoint",
@@ -34,8 +38,11 @@ __all__ = [
 	"ProfileAnalysisJobStatus",
 	"ProfileAnalysisJob",
 	"ProfileAnalysisJobRequest",
-	"ProfileElevationProvider",
+	"ProfilePointRow",
+	"ProfileSummaryEntry",
 	"ProfileAnalysisJobDispatcher",
 	"ProfileAnalysisJobRepository",
 	"ProfileAnalysisPointWarehouse",
+	"ProfileElevationProvider",
 ]
+

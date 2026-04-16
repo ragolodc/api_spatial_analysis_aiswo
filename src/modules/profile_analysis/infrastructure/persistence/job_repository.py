@@ -42,7 +42,7 @@ class SQLAlchemyProfileAnalysisJobRepository(ProfileAnalysisJobRepository):
     def update(self, job: ProfileAnalysisJob) -> ProfileAnalysisJob:
         model = self._db.get(ProfileAnalysisJobModel, job.request_id)
         if model is None:
-            raise ValueError(f"ProfileAnalysisJob {job.request_id} not found")
+            raise ValueError(f"ProfileAnalysisJob {job.request_id!s} not found — cannot update a non-existent job")
 
         model.status = job.status.value
         model.payload = job.payload

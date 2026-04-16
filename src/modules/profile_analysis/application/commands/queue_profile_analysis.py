@@ -1,43 +1,36 @@
-from datetime import datetime, timezone
+from typing import Any
 from uuid import UUID, uuid4
 
-from src.modules.profile_analysis.domain.entities import (
-    ProfileAnalysisJob,
-    ProfileAnalysisJobRequest,
-    ProfileAnalysisJobStatus,
-)
-from src.modules.profile_analysis.domain.ports import (
-    ProfileAnalysisJobDispatcher,
-    ProfileAnalysisJobRepository,
+from src.modules.profile_analysis.domain.entities import ProfileAnalysisJobRequest
+from src.modules.profile_analysis.domain.ports import ProfileAnalysisJobDispatcher
+from src.modules.profile_analysis.application.commands.persist_profile_analysis_job import (
+    PersistProfileAnalysisJob,
 )
 
 
 class QueueProfileAnalysis:
-    """Application command that enqueues a profile-analysis job."""
+    """Application command that persists and enqueues a profile-analysis job."""
 
     def __init__(
         self,
         dispatcher: ProfileAnalysisJobDispatcher,
-        job_repository: ProfileAnalysisJobRepository,
+        persist_job: PersistProfileAnalysisJob,
     ) -> None:
         self._dispatcher = dispatcher
-        self._job_repository = job_repository
+        self._persist_job = persist_job
 
-    def execute(self, zone_id: UUID, payload: dict) -> UUID:
+    def execute(self, zone_id: UUID, payload: dict[str, Any]) -> UUID:
         request_id = uuid4()
-        self._job_repository.save(
-            ProfileAnalysisJob(
+        self._persist_job.queue(request_id, zone_id, payload)
+        self._dispatcher.dispatch(
+            ProfileAnalysisJobRequest(
                 request_id=request_id,
                 zone_id=zone_id,
-                status=ProfileAnalysisJobStatus.QUEUED,
                 payload=payload,
-                result_payload=None,
-                error_message=None,
-                queued_at=datetime.now(timezone.utc),
-                started_at=None,
-                completed_at=None,
             )
         )
+        return request_id
+
         request = ProfileAnalysisJobRequest(
             request_id=request_id,
             zone_id=zone_id,

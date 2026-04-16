@@ -31,8 +31,9 @@ class FakeDispatcher:
 def test_queue_profile_analysis_persists_queued_job_and_dispatches() -> None:
     repo = FakeJobRepository()
     dispatcher = FakeDispatcher()
+    persist_job = PersistProfileAnalysisJob(repo)
 
-    request_id = QueueProfileAnalysis(dispatcher=dispatcher, job_repository=repo).execute(
+    request_id = QueueProfileAnalysis(dispatcher=dispatcher, persist_job=persist_job).execute(
         zone_id=uuid4(),
         payload={"inputs": {"pivot_kind": "circular", "center": [0.0, 0.0], "radii_m": [10.0]}},
     )

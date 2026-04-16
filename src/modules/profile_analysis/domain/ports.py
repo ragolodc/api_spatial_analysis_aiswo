@@ -9,6 +9,7 @@ from src.modules.profile_analysis.domain.entities import (
     ProfilePointRow,
     ProfileSamplePoint,
     ProfileSummaryEntry,
+    ProfileType,
 )
 
 
@@ -46,7 +47,7 @@ class ProfileAnalysisPointWarehouse(Protocol):
     def get_points(
         self,
         request_id: UUID,
-        profile_type: str | None,
+        profile_type: ProfileType | None,
         limit: int,
         offset: int,
     ) -> list[ProfilePointRow]: ...

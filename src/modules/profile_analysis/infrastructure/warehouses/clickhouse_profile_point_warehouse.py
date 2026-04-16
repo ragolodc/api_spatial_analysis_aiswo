@@ -7,7 +7,10 @@ from src.modules.profile_analysis.domain.entities import (
     ProfileAnalysisResult,
     ProfilePointRow,
     ProfileSummaryEntry,
+    ProfileType,
 )
+
+_MAX_QUERY_LIMIT = 10_000
 
 
 class ClickHouseProfilePointWarehouse:
@@ -38,7 +41,7 @@ class ClickHouseProfilePointWarehouse:
                 rows.append([
                     str(result.request_id),
                     str(result.zone_id),
-                    "transverse",
+                    ProfileType.TRANSVERSE,
                     f"radius:{profile.radius_m}",
                     point_index,
                     profile.radius_m,
@@ -56,7 +59,7 @@ class ClickHouseProfilePointWarehouse:
                 rows.append([
                     str(result.request_id),
                     str(result.zone_id),
-                    "longitudinal",
+                    ProfileType.LONGITUDINAL,
                     f"azimuth:{profile.azimuth_deg}",
                     point_index,
                     point.radius_m,
@@ -118,7 +121,7 @@ class ClickHouseProfilePointWarehouse:
     def get_points(
         self,
         request_id: UUID,
-        profile_type: str | None,
+        profile_type: ProfileType | None,
         limit: int,
         offset: int,
     ) -> list[ProfilePointRow]:
@@ -144,7 +147,7 @@ class ClickHouseProfilePointWarehouse:
 
         return [
             ProfilePointRow(
-                profile_type=r[0],
+                profile_type=ProfileType(r[0]),
                 profile_key=r[1],
                 point_index=r[2],
                 radius_m=r[3],
@@ -177,7 +180,7 @@ class ClickHouseProfilePointWarehouse:
 
         return [
             ProfileSummaryEntry(
-                profile_type=r[0],
+                profile_type=ProfileType(r[0]),
                 profile_key=r[1],
                 total_points=int(r[2]),
                 min_elevation_m=float(r[3]) if r[3] is not None else None,

@@ -1,6 +1,5 @@
 """Async tasks for profile analysis."""
 
-from dataclasses import asdict, is_dataclass
 import logging
 from uuid import UUID
 
@@ -19,20 +18,6 @@ from src.shared.db.session import SessionLocal
 from src.shared.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
-
-
-def _to_json_safe(value):
-    if is_dataclass(value):
-        return _to_json_safe(asdict(value))
-    if isinstance(value, UUID):
-        return str(value)
-    if isinstance(value, dict):
-        return {k: _to_json_safe(v) for k, v in value.items()}
-    if isinstance(value, list):
-        return [_to_json_safe(item) for item in value]
-    if isinstance(value, tuple):
-        return [_to_json_safe(item) for item in value]
-    return value
 
 
 @celery_app.task(name="src.shared.workers.tasks.profile_analysis_tasks.generate_zone_profiles")

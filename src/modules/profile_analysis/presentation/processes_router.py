@@ -1,9 +1,8 @@
-"""OGC API Processes endpoints for profile-analysis jobs."""
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from uuid import UUID
 
+from src.modules.profile_analysis.domain.entities import ProfileType
 from src.modules.profile_analysis.infrastructure.factories import (
     get_get_profile_analysis_analytics,
     get_get_profile_analysis_job,
@@ -21,13 +20,17 @@ from src.modules.profile_analysis.presentation.schemas import (
     ProfileSummaryResponse,
     QueueProfileAnalysisRequest,
 )
+from src.modules.profile_analysis.domain.entities import ProfileAnalysisJob
 from src.shared.config import settings
 from src.shared.db.session import get_db
+
+_POINTS_MIN_LIMIT = 1
+_POINTS_MAX_LIMIT = 10_000
 
 router = APIRouter()
 
 
-def _to_job_response(job) -> ProfileAnalysisJobResponse:
+def _to_job_response(job: ProfileAnalysisJob) -> ProfileAnalysisJobResponse:
     return ProfileAnalysisJobResponse(
         request_id=job.request_id,
         zone_id=job.zone_id,
@@ -117,16 +120,16 @@ def get_profile_analysis_points(
     limit: int = 1000,
     offset: int = 0,
 ) -> ProfilePointsResponse:
-    if limit < 1 or limit > 10000:
-        raise HTTPException(status_code=400, detail="limit must be between 1 and 10000")
+    if limit < _POINTS_MIN_LIMIT or limit > _POINTS_MAX_LIMIT:
+        raise HTTPException(status_code=400, detail=f"limit must be between {_POINTS_MIN_LIMIT} and {_POINTS_MAX_LIMIT}")
     if offset < 0:
         raise HTTPException(status_code=400, detail="offset must be >= 0")
-    if profile_type is not None and profile_type not in ("transverse", "longitudinal"):
-        raise HTTPException(status_code=400, detail="profile_type must be 'transverse' or 'longitudinal'")
+    if profile_type is not None and profile_type not in (ProfileType.TRANSVERSE, ProfileType.LONGITUDINAL):
+        raise HTTPException(status_code=400, detail=f"profile_type must be one of: {', '.join(ProfileType)}")
 
     rows = get_get_profile_analysis_points().execute(
         request_id=request_id,
-        profile_type=profile_type,
+        profile_type=ProfileType(profile_type) if profile_type else None,
         limit=limit,
         offset=offset,
     )

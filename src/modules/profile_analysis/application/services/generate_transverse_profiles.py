@@ -33,8 +33,8 @@ class GenerateTransverseProfiles:
             angle_end = 360.0
             include_end = False
         else:
-            assert analysis_input.start_angle_deg is not None
-            assert analysis_input.end_angle_deg is not None
+            if analysis_input.start_angle_deg is None or analysis_input.end_angle_deg is None:
+                raise ValueError("Sectorial pivot requires start_angle_deg and end_angle_deg")
             angle_start, angle_end = circular_window(
                 analysis_input.start_angle_deg,
                 analysis_input.end_angle_deg,

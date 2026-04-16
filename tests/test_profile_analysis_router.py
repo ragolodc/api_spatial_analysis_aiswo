@@ -8,6 +8,7 @@ from src.modules.profile_analysis.domain.entities import (
     ProfileAnalysisJobStatus,
     ProfilePointRow,
     ProfileSummaryEntry,
+    ProfileType,
 )
 
 
@@ -102,7 +103,7 @@ def test_get_profile_analysis_points_returns_paginated_rows(client, monkeypatch)
         def execute(self, request_id, profile_type, limit, offset):
             return [
                 ProfilePointRow(
-                    profile_type="transverse",
+                    profile_type=ProfileType.TRANSVERSE,
                     profile_key="radius:100.0",
                     point_index=0,
                     radius_m=100.0,
@@ -144,7 +145,7 @@ def test_get_profile_analysis_summary_returns_per_profile_stats(client, monkeypa
         def execute(self, req_id):
             return [
                 ProfileSummaryEntry(
-                    profile_type="transverse",
+                    profile_type=ProfileType.TRANSVERSE,
                     profile_key="radius:100.0",
                     total_points=36,
                     min_elevation_m=105.0,
@@ -152,7 +153,7 @@ def test_get_profile_analysis_summary_returns_per_profile_stats(client, monkeypa
                     avg_elevation_m=118.5,
                 ),
                 ProfileSummaryEntry(
-                    profile_type="longitudinal",
+                    profile_type=ProfileType.LONGITUDINAL,
                     profile_key="azimuth:0.0",
                     total_points=10,
                     min_elevation_m=110.0,

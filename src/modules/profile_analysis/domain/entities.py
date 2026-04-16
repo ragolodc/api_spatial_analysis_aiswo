@@ -1,21 +1,34 @@
 from dataclasses import dataclass
 from enum import StrEnum
 from datetime import datetime
+from typing import Any
 from uuid import UUID
-
-
-@dataclass(frozen=True)
-class ProfileAnalysisJobRequest:
-    """Command payload to queue profile analysis work asynchronously."""
-
-    request_id: UUID
-    zone_id: UUID
-    payload: dict
 
 
 class PivotKind(StrEnum):
     CIRCULAR = "circular"
     SECTORIAL = "sectorial"
+
+
+class ProfileType(StrEnum):
+    """Discriminates between ring-shaped (transverse) and radial (longitudinal) profiles."""
+
+    TRANSVERSE = "transverse"
+    LONGITUDINAL = "longitudinal"
+
+
+class ProfileAnalysisJobStatus(StrEnum):
+    QUEUED = "queued"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+@dataclass(frozen=True)
+class ProfileAnalysisJobRequest:
+    request_id: UUID
+    zone_id: UUID
+    payload: dict[str, Any]
 
 
 @dataclass(frozen=True)
@@ -76,9 +89,7 @@ class ProfileAnalysisAnalytics:
 
 @dataclass(frozen=True)
 class ProfilePointRow:
-    """A single flattened point as returned from the analytical store."""
-
-    profile_type: str
+    profile_type: ProfileType
     profile_key: str
     point_index: int
     radius_m: float
@@ -91,9 +102,7 @@ class ProfilePointRow:
 
 @dataclass(frozen=True)
 class ProfileSummaryEntry:
-    """Per-profile aggregated statistics from the analytical store."""
-
-    profile_type: str
+    profile_type: ProfileType
     profile_key: str
     total_points: int
     min_elevation_m: float | None
@@ -101,20 +110,13 @@ class ProfileSummaryEntry:
     avg_elevation_m: float | None
 
 
-class ProfileAnalysisJobStatus(StrEnum):
-    QUEUED = "queued"
-    RUNNING = "running"
-    COMPLETED = "completed"
-    FAILED = "failed"
-
-
 @dataclass(frozen=True)
 class ProfileAnalysisJob:
     request_id: UUID
     zone_id: UUID
     status: ProfileAnalysisJobStatus
-    payload: dict
-    result_payload: dict | None
+    payload: dict[str, Any]
+    result_payload: dict[str, Any] | None
     error_message: str | None
     queued_at: datetime
     started_at: datetime | None = None

@@ -74,10 +74,9 @@ def get_run_profile_analysis(db: Session) -> RunProfileAnalysis:
 
 
 def get_queue_profile_analysis(db: Session) -> QueueProfileAnalysis:
-    """Factory for QueueProfileAnalysis command."""
     return QueueProfileAnalysis(
         dispatcher=CeleryProfileAnalysisDispatcher(),
-        job_repository=get_profile_analysis_job_repository(db),
+        persist_job=get_persist_profile_analysis_job(db),
     )
 
 

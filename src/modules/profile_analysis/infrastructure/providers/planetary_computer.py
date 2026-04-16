@@ -1,6 +1,8 @@
+import math
+
 import planetary_computer
 import pystac_client
-import rioxarray  # noqa: F401
+import rioxarray  # noqa: F401 — registers the rioxarray accessor on xarray
 from rioxarray.merge import merge_arrays
 from shapely.geometry import Polygon
 
@@ -8,6 +10,9 @@ from src.modules.profile_analysis.domain.entities import ProfileSamplePoint
 from src.modules.profile_analysis.domain.exceptions import DemNotAvailable
 
 _ASSET_KEY = "data"
+_PROVIDER_NAME = "planetary_computer"
+_RESOLUTION_M = 30.0
+_MAX_DEM_TILES = 16
 
 
 class PlanetaryComputerProfileElevationProvider:
@@ -19,11 +24,11 @@ class PlanetaryComputerProfileElevationProvider:
 
     @property
     def name(self) -> str:
-        return "planetary_computer"
+        return _PROVIDER_NAME
 
     @property
     def resolution_m(self) -> float:
-        return 30.0
+        return _RESOLUTION_M
 
     def sample_points(self, points: list[ProfileSamplePoint]) -> list[ProfileSamplePoint]:
         if not points:
@@ -38,7 +43,7 @@ class PlanetaryComputerProfileElevationProvider:
             catalog.search(
                 collections=[self._collection],
                 intersects=bbox_polygon,
-                max_items=16,
+                max_items=_MAX_DEM_TILES,
             ).items()
         )
         if not items:
@@ -48,37 +53,34 @@ class PlanetaryComputerProfileElevationProvider:
             rioxarray.open_rasterio(item.assets[_ASSET_KEY].href, masked=True, lock=False)
             for item in items
         ]
-        dem = merge_arrays(tiles) if len(tiles) > 1 else tiles[0]
+        try:
+            dem = merge_arrays(tiles) if len(tiles) > 1 else tiles[0]
+            return [self._sample_point(dem, point) for point in points]
+        finally:
+            for tile in tiles:
+                tile.close()
 
-        sampled_points: list[ProfileSamplePoint] = []
-        for point in points:
-            elevation = float(
-                dem.sel(x=point.longitude, y=point.latitude, method="nearest").values[0]
-            )
-            sampled_points.append(
-                ProfileSamplePoint(
-                    longitude=point.longitude,
-                    latitude=point.latitude,
-                    distance_m=point.distance_m,
-                    radius_m=point.radius_m,
-                    angle_deg=point.angle_deg,
-                    elevation_m=elevation,
-                )
-            )
-        return sampled_points
+    def _sample_point(self, dem, point: ProfileSamplePoint) -> ProfileSamplePoint:
+        raw_value = dem.sel(x=point.longitude, y=point.latitude, method="nearest").values[0]
+        elevation = None if (raw_value is None or math.isnan(float(raw_value))) else float(raw_value)
+        return ProfileSamplePoint(
+            longitude=point.longitude,
+            latitude=point.latitude,
+            distance_m=point.distance_m,
+            radius_m=point.radius_m,
+            angle_deg=point.angle_deg,
+            elevation_m=elevation,
+        )
 
     def _build_bbox_polygon(self, points: list[ProfileSamplePoint]) -> dict:
-        longitudes = [point.longitude for point in points]
-        latitudes = [point.latitude for point in points]
-        min_lon = min(longitudes)
-        max_lon = max(longitudes)
-        min_lat = min(latitudes)
-        max_lat = max(latitudes)
+        longitudes = [p.longitude for p in points]
+        latitudes = [p.latitude for p in points]
         polygon = Polygon([
-            (min_lon, min_lat),
-            (max_lon, min_lat),
-            (max_lon, max_lat),
-            (min_lon, max_lat),
-            (min_lon, min_lat),
+            (min(longitudes), min(latitudes)),
+            (max(longitudes), min(latitudes)),
+            (max(longitudes), max(latitudes)),
+            (min(longitudes), max(latitudes)),
+            (min(longitudes), min(latitudes)),
         ])
         return {"type": "Polygon", "coordinates": [list(polygon.exterior.coords)]}
+

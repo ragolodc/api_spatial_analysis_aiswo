@@ -1,7 +1,8 @@
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel
+from src.modules.profile_analysis.domain.entities import ProfileType
 
 
 class ProfileAnalysisJobAccepted(BaseModel):
@@ -18,7 +19,7 @@ class ProfileAnalysisJobResponse(BaseModel):
     queued_at: str
     started_at: str | None
     completed_at: str | None
-    result_payload: dict | None
+    result_payload: dict[str, Any] | None
 
 
 class ProfileAnalysisAnalyticsResponse(BaseModel):
@@ -30,7 +31,7 @@ class ProfileAnalysisAnalyticsResponse(BaseModel):
 
 
 class ProfilePointRowResponse(BaseModel):
-    profile_type: str
+    profile_type: ProfileType
     profile_key: str
     point_index: int
     radius_m: float
@@ -50,7 +51,7 @@ class ProfilePointsResponse(BaseModel):
 
 
 class ProfileSummaryEntryResponse(BaseModel):
-    profile_type: str
+    profile_type: ProfileType
     profile_key: str
     total_points: int
     min_elevation_m: float | None

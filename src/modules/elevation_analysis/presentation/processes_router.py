@@ -40,11 +40,11 @@ def run_zone_elevation_analysis(
     try:
         analysis = get_run_zone_elevation_analysis(db).execute(zone_id=body.inputs.zone_id)
     except ZoneNotFound as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     except DemNotAvailable as exc:
-        raise HTTPException(status_code=503, detail=str(exc))
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except ElevationAnalysisException as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     return analysis_to_feature(analysis)
 
@@ -65,10 +65,10 @@ def generate_zone_contours(
             interval_m=body.inputs.interval_m,
         )
     except ZoneNotFound as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     except DemNotAvailable as exc:
-        raise HTTPException(status_code=503, detail=str(exc))
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except ElevationAnalysisException as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     return contours_to_collection(contours)

@@ -116,7 +116,7 @@ def get_profile_analysis_analytics(request_id: UUID) -> ProfileAnalysisAnalytics
 )
 def get_profile_analysis_points(
     request_id: UUID,
-    profile_type: str | None = None,
+    profile_type: ProfileType | None = None,
     limit: int = 1000,
     offset: int = 0,
 ) -> ProfilePointsResponse:
@@ -124,12 +124,10 @@ def get_profile_analysis_points(
         raise HTTPException(status_code=400, detail=f"limit must be between {_POINTS_MIN_LIMIT} and {_POINTS_MAX_LIMIT}")
     if offset < 0:
         raise HTTPException(status_code=400, detail="offset must be >= 0")
-    if profile_type is not None and profile_type not in (ProfileType.TRANSVERSE, ProfileType.LONGITUDINAL):
-        raise HTTPException(status_code=400, detail=f"profile_type must be one of: {', '.join(ProfileType)}")
 
     rows = get_get_profile_analysis_points().execute(
         request_id=request_id,
-        profile_type=ProfileType(profile_type) if profile_type else None,
+        profile_type=profile_type,
         limit=limit,
         offset=offset,
     )

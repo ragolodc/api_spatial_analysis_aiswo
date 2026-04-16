@@ -135,7 +135,7 @@ def test_get_profile_analysis_points_returns_paginated_rows(client, monkeypatch)
 def test_get_profile_analysis_points_rejects_invalid_profile_type(client, monkeypatch) -> None:
     request_id = uuid4()
     response = client.get(f"/processes/profile-analysis/jobs/{request_id}/points?profile_type=invalid")
-    assert response.status_code == 400
+    assert response.status_code == 422
 
 
 def test_get_profile_analysis_summary_returns_per_profile_stats(client, monkeypatch) -> None:

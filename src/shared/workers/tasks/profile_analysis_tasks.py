@@ -1,7 +1,10 @@
 """Async tasks for profile analysis."""
 
 import logging
+from typing import Any
 from uuid import UUID
+
+import src.shared.db.registry  # noqa: F401 — ensures all ORM models are registered before SQLAlchemy resolves FKs
 
 from src.modules.profile_analysis.application.commands import (
     PersistProfileAnalysisJob,
@@ -21,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 @celery_app.task(name="src.shared.workers.tasks.profile_analysis_tasks.generate_zone_profiles")
-def generate_zone_profiles(request_id: str, zone_id: str, payload: dict) -> dict:
+def generate_zone_profiles(request_id: str, zone_id: str, payload: dict[str, Any]) -> dict[str, Any]:
     """Run profile generation asynchronously and return generated profile payload."""
     logger.info(
         "Profile analysis job started",

@@ -15,15 +15,16 @@ from src.modules.zones.presentation.features_router import router as zones_featu
 from src.shared.config import settings
 from src.shared.presentation.ogc_landing_router import router as ogc_landing_router
 
-
-
-
-
 def  create_app(*, init_infraestructure: bool = True) -> FastAPI:
     app = FastAPI(
         title=settings.app_name,
         version="0.1.0",
         description="API para analisis espacial basada en FastAPI + PostGIS.",
+        swagger_ui_parameters={
+            "syntaxHighlight": False,
+            "defaultModelsExpandDepth": -1,
+            "docExpansion": "none",
+        },
     )
 
     @app.get("/health", tags=["system"])

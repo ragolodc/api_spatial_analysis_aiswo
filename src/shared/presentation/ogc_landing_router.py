@@ -1,12 +1,14 @@
 """OGC API discovery endpoints: landing page, conformance, collections and processes."""
 
+from typing import Any
+
 from fastapi import APIRouter
 
 router = APIRouter(tags=["OGC API"])
 
 
 @router.get("/", summary="OGC API Landing Page")
-def landing_page() -> dict:
+def landing_page() -> dict[str, Any]:
     return {
         "title": "AISCO Spatial Analysis API",
         "description": "Spatial analysis API following OGC API Features and OGC API Processes standards.",
@@ -20,7 +22,7 @@ def landing_page() -> dict:
 
 
 @router.get("/conformance", summary="OGC API Conformance Classes")
-def conformance() -> dict:
+def conformance() -> dict[str, Any]:
     return {
         "conformsTo": [
             "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core",
@@ -32,7 +34,7 @@ def conformance() -> dict:
 
 
 @router.get("/collections", summary="OGC API Available Collections")
-def list_collections() -> dict:
+def list_collections() -> dict[str, Any]:
     return {
         "collections": [
             {
@@ -58,7 +60,7 @@ def list_collections() -> dict:
 
 
 @router.get("/processes", summary="OGC API Available Processes")
-def list_processes() -> dict:
+def list_processes() -> dict[str, Any]:
     return {
         "processes": [
             {

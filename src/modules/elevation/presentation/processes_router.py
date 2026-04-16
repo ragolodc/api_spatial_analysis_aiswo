@@ -34,7 +34,7 @@ def execute_highest_point(
                 raise HTTPException(status_code=404, detail="Zone not found")
         point, elevation = get_get_highest_point(db).execute(polygon)
     except ElevationDataNotFound as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     return ElevationFeature(
         geometry=PointGeometry(coordinates=[point.longitude, point.latitude]),
@@ -54,7 +54,7 @@ def execute_point_elevation(
         )
         elevation = get_get_point_elevation(db).execute(point)
     except ElevationDataNotFound as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     return ElevationFeature(
         geometry=PointGeometry(coordinates=[point.longitude, point.latitude]),

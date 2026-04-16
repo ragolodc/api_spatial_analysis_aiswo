@@ -24,4 +24,6 @@ celery_app.conf.update(
     enable_utc=True,
 )
 
-celery_app.autodiscover_tasks(["src.shared.workers.tasks"])
+celery_app.conf.include = [
+    "src.shared.workers.tasks.profile_analysis_tasks",
+]

@@ -1,6 +1,7 @@
 """Shared domain value objects used across multiple modules."""
 
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -9,7 +10,7 @@ class GeoPolygon:
 
     coordinates: list[list[list[float]]]
 
-    def to_geojson(self) -> dict:
+    def to_geojson(self) -> dict[str, Any]:
         return {"type": "Polygon", "coordinates": self.coordinates}
 
 
@@ -19,5 +20,5 @@ class GeoMultiLineString:
 
     coordinates: list[list[list[float]]]
 
-    def to_geojson(self) -> dict:
+    def to_geojson(self) -> dict[str, Any]:
         return {"type": "MultiLineString", "coordinates": self.coordinates}

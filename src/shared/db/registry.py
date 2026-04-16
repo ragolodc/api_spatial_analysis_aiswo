@@ -5,6 +5,9 @@ from src.modules.elevation_analysis.infrastructure.persistence.models import (
     ElevationContourModel,
     ElevationPointModel,
 )
+from src.modules.profile_analysis.infrastructure.persistence.models import (
+    ProfileAnalysisJobModel,
+)
 from src.modules.zones.infrastructure.persistence.models import ZoneModel
 
 __all__ = [
@@ -12,5 +15,6 @@ __all__ = [
     "ElevationAnalysisModel",
     "ElevationPointModel",
     "ElevationContourModel",
+    "ProfileAnalysisJobModel",
     "ZoneModel",
 ]

@@ -12,3 +12,5 @@ shapely>=2.0.0
 numpy>=1.26.0
 contourpy>=1.2.0
 pytest==8.3.5
+celery[redis]==5.4.0
+clickhouse-connect==0.8.13

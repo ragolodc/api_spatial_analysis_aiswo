@@ -6,6 +6,10 @@ from src.modules.profile_analysis.presentation.schemas.responses import (
     ProfileAnalysisAnalyticsResponse,
     ProfileAnalysisJobAccepted,
     ProfileAnalysisJobResponse,
+    ProfilePointRowResponse,
+    ProfilePointsResponse,
+    ProfileSummaryEntryResponse,
+    ProfileSummaryResponse,
 )
 
 __all__ = [
@@ -14,4 +18,8 @@ __all__ = [
     "ProfileAnalysisJobAccepted",
     "ProfileAnalysisJobResponse",
     "ProfileAnalysisAnalyticsResponse",
+    "ProfilePointRowResponse",
+    "ProfilePointsResponse",
+    "ProfileSummaryEntryResponse",
+    "ProfileSummaryResponse",
 ]

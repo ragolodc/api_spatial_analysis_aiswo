@@ -6,7 +6,9 @@ from src.modules.profile_analysis.domain.entities import (
     ProfileAnalysisJob,
     ProfileAnalysisJobRequest,
     ProfileAnalysisResult,
+    ProfilePointRow,
     ProfileSamplePoint,
+    ProfileSummaryEntry,
 )
 
 
@@ -41,3 +43,13 @@ class ProfileAnalysisPointWarehouse(Protocol):
 
     def store_result(self, result: ProfileAnalysisResult) -> None: ...
     def get_analytics(self, request_id: UUID) -> ProfileAnalysisAnalytics | None: ...
+    def get_points(
+        self,
+        request_id: UUID,
+        profile_type: str | None,
+        limit: int,
+        offset: int,
+    ) -> list[ProfilePointRow]: ...
+    def get_profile_summaries(
+        self, request_id: UUID
+    ) -> list[ProfileSummaryEntry]: ...

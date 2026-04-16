@@ -12,7 +12,7 @@ services:
       redis:
         condition: service_started
       clickhouse:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "${API_GEOQUIBIDY_PORT}:${API_PORT}"
     volumes:
@@ -32,7 +32,7 @@ services:
       redis:
         condition: service_started
       clickhouse:
-        condition: service_started
+        condition: service_healthy
     volumes:
       - .:/app
     command: celery -A src.shared.workers.celery_app worker --loglevel=INFO --queues=${PROFILE_ANALYSIS_QUEUE:-profile_analysis}
@@ -68,6 +68,11 @@ services:
       - "${CLICKHOUSE_NATIVE_PORT:-9000}:9000"
     volumes:
       - clickhouse_data:/var/lib/clickhouse
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8123/ping || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
   db_data:

@@ -74,6 +74,33 @@ class ProfileAnalysisAnalytics:
     avg_elevation_m: float | None
 
 
+@dataclass(frozen=True)
+class ProfilePointRow:
+    """A single flattened point as returned from the analytical store."""
+
+    profile_type: str
+    profile_key: str
+    point_index: int
+    radius_m: float
+    angle_deg: float
+    distance_m: float
+    longitude: float
+    latitude: float
+    elevation_m: float | None
+
+
+@dataclass(frozen=True)
+class ProfileSummaryEntry:
+    """Per-profile aggregated statistics from the analytical store."""
+
+    profile_type: str
+    profile_key: str
+    total_points: int
+    min_elevation_m: float | None
+    max_elevation_m: float | None
+    avg_elevation_m: float | None
+
+
 class ProfileAnalysisJobStatus(StrEnum):
     QUEUED = "queued"
     RUNNING = "running"

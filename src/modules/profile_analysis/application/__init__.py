@@ -7,6 +7,8 @@ from src.modules.profile_analysis.application.commands import (
 from src.modules.profile_analysis.application.queries import (
 	GetProfileAnalysisAnalytics,
 	GetProfileAnalysisJob,
+	GetProfileAnalysisPoints,
+	GetProfileAnalysisSummary,
 )
 
 __all__ = [
@@ -16,4 +18,6 @@ __all__ = [
 	"RunProfileAnalysis",
 	"GetProfileAnalysisAnalytics",
 	"GetProfileAnalysisJob",
+	"GetProfileAnalysisPoints",
+	"GetProfileAnalysisSummary",
 ]

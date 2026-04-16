@@ -7,6 +7,8 @@ from src.modules.elevation.infrastructure.persistence import SQLAlchemyElevation
 from src.modules.profile_analysis.application import (
     GetProfileAnalysisAnalytics,
     GetProfileAnalysisJob,
+    GetProfileAnalysisPoints,
+    GetProfileAnalysisSummary,
 )
 from src.modules.profile_analysis.application.commands import (
     PersistProfileAnalysisJob,
@@ -85,3 +87,11 @@ def get_get_profile_analysis_job(db: Session) -> GetProfileAnalysisJob:
 
 def get_get_profile_analysis_analytics() -> GetProfileAnalysisAnalytics:
     return GetProfileAnalysisAnalytics(warehouse=get_profile_analysis_point_warehouse())
+
+
+def get_get_profile_analysis_points() -> GetProfileAnalysisPoints:
+    return GetProfileAnalysisPoints(warehouse=get_profile_analysis_point_warehouse())
+
+
+def get_get_profile_analysis_summary() -> GetProfileAnalysisSummary:
+    return GetProfileAnalysisSummary(warehouse=get_profile_analysis_point_warehouse())

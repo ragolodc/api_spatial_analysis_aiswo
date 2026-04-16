@@ -6,6 +6,8 @@ from src.modules.profile_analysis.domain.entities import (
     ProfileAnalysisAnalytics,
     ProfileAnalysisJob,
     ProfileAnalysisJobStatus,
+    ProfilePointRow,
+    ProfileSummaryEntry,
 )
 
 
@@ -91,3 +93,84 @@ def test_get_profile_analysis_analytics_returns_aggregated_result(client, monkey
     assert response.status_code == 200
     assert response.json()["total_points"] == 120
     assert response.json()["avg_elevation_m"] == 118.5
+
+
+def test_get_profile_analysis_points_returns_paginated_rows(client, monkeypatch) -> None:
+    request_id = uuid4()
+
+    class _GetProfileAnalysisPoints:
+        def execute(self, request_id, profile_type, limit, offset):
+            return [
+                ProfilePointRow(
+                    profile_type="transverse",
+                    profile_key="radius:100.0",
+                    point_index=0,
+                    radius_m=100.0,
+                    angle_deg=0.0,
+                    distance_m=100.0,
+                    longitude=-74.05,
+                    latitude=4.61,
+                    elevation_m=120.5,
+                )
+            ]
+
+    monkeypatch.setattr(
+        profile_router,
+        "get_get_profile_analysis_points",
+        lambda: _GetProfileAnalysisPoints(),
+    )
+
+    response = client.get(f"/processes/profile-analysis/jobs/{request_id}/points?limit=10&offset=0")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 1
+    assert data["limit"] == 10
+    assert data["offset"] == 0
+    assert data["items"][0]["profile_type"] == "transverse"
+    assert data["items"][0]["elevation_m"] == 120.5
+
+
+def test_get_profile_analysis_points_rejects_invalid_profile_type(client, monkeypatch) -> None:
+    request_id = uuid4()
+    response = client.get(f"/processes/profile-analysis/jobs/{request_id}/points?profile_type=invalid")
+    assert response.status_code == 400
+
+
+def test_get_profile_analysis_summary_returns_per_profile_stats(client, monkeypatch) -> None:
+    request_id = uuid4()
+
+    class _GetProfileAnalysisSummary:
+        def execute(self, req_id):
+            return [
+                ProfileSummaryEntry(
+                    profile_type="transverse",
+                    profile_key="radius:100.0",
+                    total_points=36,
+                    min_elevation_m=105.0,
+                    max_elevation_m=135.0,
+                    avg_elevation_m=118.5,
+                ),
+                ProfileSummaryEntry(
+                    profile_type="longitudinal",
+                    profile_key="azimuth:0.0",
+                    total_points=10,
+                    min_elevation_m=110.0,
+                    max_elevation_m=130.0,
+                    avg_elevation_m=120.0,
+                ),
+            ]
+
+    monkeypatch.setattr(
+        profile_router,
+        "get_get_profile_analysis_summary",
+        lambda: _GetProfileAnalysisSummary(),
+    )
+
+    response = client.get(f"/processes/profile-analysis/jobs/{request_id}/summary")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["profiles"]) == 2
+    assert data["profiles"][0]["profile_key"] == "radius:100.0"
+    assert data["profiles"][1]["profile_type"] == "longitudinal"

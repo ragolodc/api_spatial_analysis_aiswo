@@ -7,12 +7,18 @@ from uuid import UUID
 from src.modules.profile_analysis.infrastructure.factories import (
     get_get_profile_analysis_analytics,
     get_get_profile_analysis_job,
+    get_get_profile_analysis_points,
+    get_get_profile_analysis_summary,
     get_queue_profile_analysis,
 )
 from src.modules.profile_analysis.presentation.schemas import (
     ProfileAnalysisAnalyticsResponse,
     ProfileAnalysisJobAccepted,
     ProfileAnalysisJobResponse,
+    ProfilePointRowResponse,
+    ProfilePointsResponse,
+    ProfileSummaryEntryResponse,
+    ProfileSummaryResponse,
     QueueProfileAnalysisRequest,
 )
 from src.shared.config import settings
@@ -96,4 +102,75 @@ def get_profile_analysis_analytics(request_id: UUID) -> ProfileAnalysisAnalytics
         min_elevation_m=analytics.min_elevation_m,
         max_elevation_m=analytics.max_elevation_m,
         avg_elevation_m=analytics.avg_elevation_m,
+    )
+
+
+@router.get(
+    "/processes/profile-analysis/jobs/{request_id}/points",
+    response_model=ProfilePointsResponse,
+    summary="Listar puntos muestreados de un job (paginado)",
+    tags=["OGC Processes - Profile Analysis"],
+)
+def get_profile_analysis_points(
+    request_id: UUID,
+    profile_type: str | None = None,
+    limit: int = 1000,
+    offset: int = 0,
+) -> ProfilePointsResponse:
+    if limit < 1 or limit > 10000:
+        raise HTTPException(status_code=400, detail="limit must be between 1 and 10000")
+    if offset < 0:
+        raise HTTPException(status_code=400, detail="offset must be >= 0")
+    if profile_type is not None and profile_type not in ("transverse", "longitudinal"):
+        raise HTTPException(status_code=400, detail="profile_type must be 'transverse' or 'longitudinal'")
+
+    rows = get_get_profile_analysis_points().execute(
+        request_id=request_id,
+        profile_type=profile_type,
+        limit=limit,
+        offset=offset,
+    )
+    return ProfilePointsResponse(
+        request_id=request_id,
+        total=len(rows),
+        limit=limit,
+        offset=offset,
+        items=[
+            ProfilePointRowResponse(
+                profile_type=r.profile_type,
+                profile_key=r.profile_key,
+                point_index=r.point_index,
+                radius_m=r.radius_m,
+                angle_deg=r.angle_deg,
+                distance_m=r.distance_m,
+                longitude=r.longitude,
+                latitude=r.latitude,
+                elevation_m=r.elevation_m,
+            )
+            for r in rows
+        ],
+    )
+
+
+@router.get(
+    "/processes/profile-analysis/jobs/{request_id}/summary",
+    response_model=ProfileSummaryResponse,
+    summary="Resumen por perfil (min/max/avg elevation agrupado por perfil)",
+    tags=["OGC Processes - Profile Analysis"],
+)
+def get_profile_analysis_summary(request_id: UUID) -> ProfileSummaryResponse:
+    entries = get_get_profile_analysis_summary().execute(request_id)
+    return ProfileSummaryResponse(
+        request_id=request_id,
+        profiles=[
+            ProfileSummaryEntryResponse(
+                profile_type=e.profile_type,
+                profile_key=e.profile_key,
+                total_points=e.total_points,
+                min_elevation_m=e.min_elevation_m,
+                max_elevation_m=e.max_elevation_m,
+                avg_elevation_m=e.avg_elevation_m,
+            )
+            for e in entries
+        ],
     )

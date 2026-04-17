@@ -2,7 +2,10 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from src.modules.profile_analysis.application import GetProfileAnalysisJob
-from src.modules.profile_analysis.domain.entities import ProfileAnalysisJob, ProfileAnalysisJobStatus
+from src.modules.profile_analysis.domain.entities import (
+    ProfileAnalysisJob,
+    ProfileAnalysisJobStatus,
+)
 
 
 class FakeJobRepository:

@@ -15,7 +15,8 @@ from src.modules.zones.presentation.features_router import router as zones_featu
 from src.shared.config import settings
 from src.shared.presentation.ogc_landing_router import router as ogc_landing_router
 
-def  create_app(*, init_infraestructure: bool = True) -> FastAPI:
+
+def create_app(*, init_infraestructure: bool = True) -> FastAPI:
     app = FastAPI(
         title=settings.app_name,
         version="0.1.0",
@@ -27,18 +28,23 @@ def  create_app(*, init_infraestructure: bool = True) -> FastAPI:
         },
     )
 
-    @app.get("/health", tags=["system"])
+    API_V1_PREFIX = "/api/v1"
+
+    @app.get(f"{API_V1_PREFIX}/health", tags=["system"])
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
-    app.include_router(ogc_landing_router)
-    app.include_router(zones_features_router)
-    app.include_router(elevation_sources_router)
-    app.include_router(elevation_analysis_features_router)
-    app.include_router(elevation_analysis_processes_router)
-    app.include_router(profile_analysis_processes_router)
-    app.include_router(elevation_processes_router)
+    API_V1_PREFIX = "/api/v1"
+
+    app.include_router(ogc_landing_router, prefix=API_V1_PREFIX)
+    app.include_router(zones_features_router, prefix=API_V1_PREFIX)
+    app.include_router(elevation_sources_router, prefix=API_V1_PREFIX)
+    app.include_router(elevation_analysis_features_router, prefix=API_V1_PREFIX)
+    app.include_router(elevation_analysis_processes_router, prefix=API_V1_PREFIX)
+    app.include_router(profile_analysis_processes_router, prefix=API_V1_PREFIX)
+    app.include_router(elevation_processes_router, prefix=API_V1_PREFIX)
 
     return app
+
 
 app = create_app()

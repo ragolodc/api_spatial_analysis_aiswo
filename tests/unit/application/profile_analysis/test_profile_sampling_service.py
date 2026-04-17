@@ -1,5 +1,9 @@
 from src.modules.profile_analysis.application.services import SampleProfileElevations
-from src.modules.profile_analysis.domain.entities import LongitudinalProfile, ProfileSamplePoint, TransverseProfile
+from src.modules.profile_analysis.domain.entities import (
+    LongitudinalProfile,
+    ProfileSamplePoint,
+    TransverseProfile,
+)
 
 
 class FakeElevationProvider:
@@ -29,7 +33,11 @@ def test_sample_profile_elevations_enriches_transverse_profiles() -> None:
     service = SampleProfileElevations(FakeElevationProvider())
     profile = TransverseProfile(
         radius_m=100.0,
-        points=[ProfileSamplePoint(longitude=0.0, latitude=0.0, distance_m=0.0, radius_m=100.0, angle_deg=0.0)],
+        points=[
+            ProfileSamplePoint(
+                longitude=0.0, latitude=0.0, distance_m=0.0, radius_m=100.0, angle_deg=0.0
+            )
+        ],
     )
 
     result = service.sample_transverse([profile])
@@ -43,7 +51,11 @@ def test_sample_profile_elevations_enriches_longitudinal_profiles() -> None:
     service = SampleProfileElevations(FakeElevationProvider())
     profile = LongitudinalProfile(
         azimuth_deg=45.0,
-        points=[ProfileSamplePoint(longitude=0.0, latitude=0.0, distance_m=10.0, radius_m=10.0, angle_deg=45.0)],
+        points=[
+            ProfileSamplePoint(
+                longitude=0.0, latitude=0.0, distance_m=10.0, radius_m=10.0, angle_deg=45.0
+            )
+        ],
     )
 
     result = service.sample_longitudinal([profile])

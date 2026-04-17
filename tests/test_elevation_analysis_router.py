@@ -12,6 +12,8 @@ from src.modules.elevation_analysis.domain.entities import (
 from src.modules.elevation_analysis.domain.exceptions import DemNotAvailable, ZoneNotFound
 from src.shared.domain import GeoMultiLineString
 
+_API_V1_PREFIX = "/api/v1"
+
 
 def _sample_analysis() -> ElevationAnalysis:
     analysis_id = uuid4()
@@ -60,7 +62,7 @@ def test_run_zone_elevation_analysis_returns_feature(client, monkeypatch) -> Non
     )
 
     response = client.post(
-        "/processes/analyze-zone-elevation/execution",
+        _API_V1_PREFIX + "/processes/analyze-zone-elevation/execution",
         json={"inputs": {"zone_id": str(analysis.zone_id)}},
     )
 
@@ -82,7 +84,7 @@ def test_run_zone_elevation_analysis_maps_zone_not_found(client, monkeypatch) ->
     )
 
     response = client.post(
-        "/processes/analyze-zone-elevation/execution",
+        _API_V1_PREFIX + "/processes/analyze-zone-elevation/execution",
         json={"inputs": {"zone_id": str(uuid4())}},
     )
 
@@ -102,7 +104,7 @@ def test_generate_zone_contours_maps_dem_not_available(client, monkeypatch) -> N
     )
 
     response = client.post(
-        "/processes/generate-zone-contours/execution",
+        _API_V1_PREFIX + "/processes/generate-zone-contours/execution",
         json={"inputs": {"zone_id": str(uuid4()), "interval_m": 100.0}},
     )
 
@@ -119,9 +121,11 @@ def test_get_zone_contours_returns_feature_collection(client, monkeypatch) -> No
             assert requested_zone_id == zone_id
             return [contour]
 
-    monkeypatch.setattr(analysis_features_router, "get_get_zone_contours", lambda db: _GetContours())
+    monkeypatch.setattr(
+        analysis_features_router, "get_get_zone_contours", lambda db: _GetContours()
+    )
 
-    response = client.get(f"/collections/zone-contours/items?zone_id={zone_id}")
+    response = client.get(f"{_API_V1_PREFIX}/collections/zone-contours/items?zone_id={zone_id}")
 
     assert response.status_code == 200
     payload = response.json()
@@ -137,9 +141,13 @@ def test_list_zone_analyses_returns_feature_collection(client, monkeypatch) -> N
             assert zone_id == analysis.zone_id
             return [analysis]
 
-    monkeypatch.setattr(analysis_features_router, "get_list_zone_analyses", lambda db: _ListAnalyses())
+    monkeypatch.setattr(
+        analysis_features_router, "get_list_zone_analyses", lambda db: _ListAnalyses()
+    )
 
-    response = client.get(f"/collections/zone-analyses/items?zone_id={analysis.zone_id}")
+    response = client.get(
+        f"{_API_V1_PREFIX}/collections/zone-analyses/items?zone_id={analysis.zone_id}"
+    )
 
     assert response.status_code == 200
     payload = response.json()

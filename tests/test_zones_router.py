@@ -5,6 +5,8 @@ import src.modules.zones.presentation.features_router as zones_router
 from src.modules.zones.domain.entities import Zone, ZoneType
 from src.shared.domain import GeoPolygon
 
+_API_V1_PREFIX = "/api/v1"
+
 
 def _sample_zone() -> Zone:
     return Zone(
@@ -25,7 +27,7 @@ def test_list_zones_returns_feature_collection(client, monkeypatch) -> None:
 
     monkeypatch.setattr(zones_router, "get_list_zones", lambda db: _ListZones())
 
-    response = client.get("/collections/zones/items")
+    response = client.get(f"{_API_V1_PREFIX}/collections/zones/items")
 
     assert response.status_code == 200
     payload = response.json()
@@ -40,7 +42,7 @@ def test_get_zone_returns_404_when_not_found(client, monkeypatch) -> None:
 
     monkeypatch.setattr(zones_router, "get_get_zone", lambda db: _GetZone())
 
-    response = client.get(f"/collections/zones/items/{uuid4()}")
+    response = client.get(f"{_API_V1_PREFIX}/collections/zones/items/{uuid4()}")
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Zone not found"
@@ -59,7 +61,7 @@ def test_create_zone_returns_created_feature(client, monkeypatch) -> None:
     monkeypatch.setattr(zones_router, "get_create_zone", lambda db: _CreateZone())
 
     response = client.post(
-        "/collections/zones/items",
+        f"{_API_V1_PREFIX}/collections/zones/items",
         json={
             "name": "North field",
             "zone_type": "farm_boundary",

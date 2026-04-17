@@ -1,6 +1,9 @@
 from uuid import uuid4
 
-from src.modules.profile_analysis.application.commands import PersistProfileAnalysisJob, QueueProfileAnalysis
+from src.modules.profile_analysis.application.commands import (
+    PersistProfileAnalysisJob,
+    QueueProfileAnalysis,
+)
 from src.modules.profile_analysis.domain.entities import ProfileAnalysisJobStatus
 
 

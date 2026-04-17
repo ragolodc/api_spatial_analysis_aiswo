@@ -11,6 +11,8 @@ from src.modules.profile_analysis.domain.entities import (
     ProfileType,
 )
 
+_API_V1_PREFIX = "/api/v1"
+
 
 def test_queue_profile_analysis_returns_accepted(client, monkeypatch) -> None:
     request_id = uuid4()
@@ -19,10 +21,12 @@ def test_queue_profile_analysis_returns_accepted(client, monkeypatch) -> None:
         def execute(self, zone_id, payload):
             return request_id
 
-    monkeypatch.setattr(profile_router, "get_queue_profile_analysis", lambda db: _QueueProfileAnalysis())
+    monkeypatch.setattr(
+        profile_router, "get_queue_profile_analysis", lambda db: _QueueProfileAnalysis()
+    )
 
     response = client.post(
-        "/processes/profile-analysis/execution",
+        f"{_API_V1_PREFIX}/processes/profile-analysis/execution",
         json={
             "inputs": {
                 "zone_id": str(uuid4()),
@@ -60,9 +64,11 @@ def test_get_profile_analysis_job_returns_persisted_status(client, monkeypatch) 
                 completed_at=datetime.now(timezone.utc),
             )
 
-    monkeypatch.setattr(profile_router, "get_get_profile_analysis_job", lambda db: _GetProfileAnalysisJob())
+    monkeypatch.setattr(
+        profile_router, "get_get_profile_analysis_job", lambda db: _GetProfileAnalysisJob()
+    )
 
-    response = client.get(f"/processes/profile-analysis/jobs/{request_id}")
+    response = client.get(f"{_API_V1_PREFIX}/processes/profile-analysis/jobs/{request_id}")
 
     assert response.status_code == 200
     assert response.json()["status"] == "completed"
@@ -89,7 +95,9 @@ def test_get_profile_analysis_analytics_returns_aggregated_result(client, monkey
         lambda: _GetProfileAnalysisAnalytics(),
     )
 
-    response = client.get(f"/processes/profile-analysis/jobs/{request_id}/analytics")
+    response = client.get(
+        f"{_API_V1_PREFIX}/processes/profile-analysis/jobs/{request_id}/analytics"
+    )
 
     assert response.status_code == 200
     assert response.json()["total_points"] == 120
@@ -121,7 +129,9 @@ def test_get_profile_analysis_points_returns_paginated_rows(client, monkeypatch)
         lambda: _GetProfileAnalysisPoints(),
     )
 
-    response = client.get(f"/processes/profile-analysis/jobs/{request_id}/points?limit=10&offset=0")
+    response = client.get(
+        f"{_API_V1_PREFIX}/processes/profile-analysis/jobs/{request_id}/points?limit=10&offset=0"
+    )
 
     assert response.status_code == 200
     data = response.json()
@@ -134,7 +144,9 @@ def test_get_profile_analysis_points_returns_paginated_rows(client, monkeypatch)
 
 def test_get_profile_analysis_points_rejects_invalid_profile_type(client, monkeypatch) -> None:
     request_id = uuid4()
-    response = client.get(f"/processes/profile-analysis/jobs/{request_id}/points?profile_type=invalid")
+    response = client.get(
+        f"{_API_V1_PREFIX}/processes/profile-analysis/jobs/{request_id}/points?profile_type=invalid"
+    )
     assert response.status_code == 422
 
 
@@ -168,7 +180,7 @@ def test_get_profile_analysis_summary_returns_per_profile_stats(client, monkeypa
         lambda: _GetProfileAnalysisSummary(),
     )
 
-    response = client.get(f"/processes/profile-analysis/jobs/{request_id}/summary")
+    response = client.get(f"{_API_V1_PREFIX}/processes/profile-analysis/jobs/{request_id}/summary")
 
     assert response.status_code == 200
     data = response.json()

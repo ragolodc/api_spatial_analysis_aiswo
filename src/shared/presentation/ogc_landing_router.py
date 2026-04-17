@@ -1,7 +1,6 @@
 """OGC API discovery endpoints: landing page, conformance, collections and processes."""
 
 from typing import Any
-
 from fastapi import APIRouter
 
 router = APIRouter(tags=["OGC API"])

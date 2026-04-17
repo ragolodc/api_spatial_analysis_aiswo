@@ -52,12 +52,12 @@ docker compose exec api alembic upgrade head
 
 3. Probar API:
 
-- Health: `GET http://localhost:8000/health`
-- Landing OGC: `GET http://localhost:8000/`
-- Collections: `GET http://localhost:8000/collections`
-- Processes: `GET http://localhost:8000/processes`
-- Zones items: `GET http://localhost:8000/collections/zones/items`
-- Elevation sources: `GET http://localhost:8000/elevation-sources`
+- Health: `GET http://localhost:8000/api/v1/health`
+- Landing OGC: `GET http://localhost:8000/api/v1/`
+- Collections: `GET http://localhost:8000/api/v1/collections`
+- Processes: `GET http://localhost:8000/api/v1/processes`
+- Zones items: `GET http://localhost:8000/api/v1/collections/zones/items`
+- Elevation sources: `GET http://localhost:8000/api/v1/elevation-sources`
 
 ## Notas sobre rasters (recomendacion inicial)
 

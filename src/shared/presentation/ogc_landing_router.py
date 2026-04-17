@@ -1,6 +1,7 @@
 """OGC API discovery endpoints: landing page, conformance, collections and processes."""
 
 from typing import Any
+
 from fastapi import APIRouter
 
 router = APIRouter(tags=["OGC API"])
@@ -10,12 +11,28 @@ router = APIRouter(tags=["OGC API"])
 def landing_page() -> dict[str, Any]:
     return {
         "title": "AISCO Spatial Analysis API",
-        "description": "Spatial analysis API following OGC API Features and OGC API Processes standards.",
+        "description": "Spatial analysis API following OGC API Features and OGC API Processes "
+        "standards.",
         "links": [
             {"href": "/", "rel": "self", "type": "application/json", "title": "This document"},
-            {"href": "/conformance", "rel": "conformance", "type": "application/json", "title": "Conformance classes"},
-            {"href": "/collections", "rel": "data", "type": "application/json", "title": "Available collections"},
-            {"href": "/processes", "rel": "processes", "type": "application/json", "title": "Available processes"},
+            {
+                "href": "/conformance",
+                "rel": "conformance",
+                "type": "application/json",
+                "title": "Conformance classes",
+            },
+            {
+                "href": "/collections",
+                "rel": "data",
+                "type": "application/json",
+                "title": "Available collections",
+            },
+            {
+                "href": "/processes",
+                "rel": "processes",
+                "type": "application/json",
+                "title": "Available processes",
+            },
         ],
     }
 
@@ -40,19 +57,37 @@ def list_collections() -> dict[str, Any]:
                 "id": "zones",
                 "title": "Zones",
                 "description": "Geographic zones used for spatial analysis.",
-                "links": [{"href": "/collections/zones/items", "rel": "items", "type": "application/geo+json"}],
+                "links": [
+                    {
+                        "href": "/collections/zones/items",
+                        "rel": "items",
+                        "type": "application/geo+json",
+                    }
+                ],
             },
             {
                 "id": "zone-analyses",
                 "title": "Zone Elevation Analyses",
                 "description": "Elevation analysis results per zone.",
-                "links": [{"href": "/collections/zone-analyses/items", "rel": "items", "type": "application/geo+json"}],
+                "links": [
+                    {
+                        "href": "/collections/zone-analyses/items",
+                        "rel": "items",
+                        "type": "application/geo+json",
+                    }
+                ],
             },
             {
                 "id": "zone-contours",
                 "title": "Zone Elevation Contours",
                 "description": "Elevation contour lines per zone.",
-                "links": [{"href": "/collections/zone-contours/items", "rel": "items", "type": "application/geo+json"}],
+                "links": [
+                    {
+                        "href": "/collections/zone-contours/items",
+                        "rel": "items",
+                        "type": "application/geo+json",
+                    }
+                ],
             },
         ]
     }
@@ -68,7 +103,13 @@ def list_processes() -> dict[str, Any]:
                 "description": "Get the highest elevation point within a polygon or zone.",
                 "version": "1.0.0",
                 "jobControlOptions": ["sync-execute"],
-                "links": [{"href": "/processes/highest-point/execution", "rel": "execute", "type": "application/json"}],
+                "links": [
+                    {
+                        "href": "/processes/highest-point/execution",
+                        "rel": "execute",
+                        "type": "application/json",
+                    }
+                ],
             },
             {
                 "id": "point-elevation",
@@ -76,15 +117,28 @@ def list_processes() -> dict[str, Any]:
                 "description": "Get the elevation at a specific geographic point.",
                 "version": "1.0.0",
                 "jobControlOptions": ["sync-execute"],
-                "links": [{"href": "/processes/point-elevation/execution", "rel": "execute", "type": "application/json"}],
+                "links": [
+                    {
+                        "href": "/processes/point-elevation/execution",
+                        "rel": "execute",
+                        "type": "application/json",
+                    }
+                ],
             },
             {
                 "id": "analyze-zone-elevation",
                 "title": "Analyze Zone Elevation",
-                "description": "Analyse elevation for a zone and persist characteristic points (highest, lowest, centroid).",
+                "description": "Analyse elevation for a zone and persist characteristic points"
+                " (highest, lowest, centroid).",
                 "version": "1.0.0",
                 "jobControlOptions": ["sync-execute"],
-                "links": [{"href": "/processes/analyze-zone-elevation/execution", "rel": "execute", "type": "application/json"}],
+                "links": [
+                    {
+                        "href": "/processes/analyze-zone-elevation/execution",
+                        "rel": "execute",
+                        "type": "application/json",
+                    }
+                ],
             },
             {
                 "id": "generate-zone-contours",
@@ -92,7 +146,13 @@ def list_processes() -> dict[str, Any]:
                 "description": "Generate and persist elevation contour lines for a zone.",
                 "version": "1.0.0",
                 "jobControlOptions": ["sync-execute"],
-                "links": [{"href": "/processes/generate-zone-contours/execution", "rel": "execute", "type": "application/json"}],
+                "links": [
+                    {
+                        "href": "/processes/generate-zone-contours/execution",
+                        "rel": "execute",
+                        "type": "application/json",
+                    }
+                ],
             },
         ]
     }

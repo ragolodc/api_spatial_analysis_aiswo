@@ -79,7 +79,7 @@ def test_highest_point_with_unknown_zone_returns_404(client, monkeypatch) -> Non
     )
 
     assert response.status_code == 404
-    assert response.json()["detail"] == "Zone not found"
+    assert response.json()["message"] == "Zone not found"
 
 
 def test_point_elevation_maps_domain_not_found_to_404(client, monkeypatch) -> None:
@@ -97,12 +97,14 @@ def test_point_elevation_maps_domain_not_found_to_404(client, monkeypatch) -> No
     )
 
     assert response.status_code == 404
-    assert response.json()["detail"] == "No DEM coverage for point"
+    assert response.json()["message"] == "No DEM coverage for point"
 
 
 def test_highest_point_requires_polygon_or_zone_id(client) -> None:
     response = client.post(
         f"{_API_V1_PREFIX}/processes/highest-point/execution", json={"inputs": {}}
     )
+
+    print(response)
 
     assert response.status_code == 422

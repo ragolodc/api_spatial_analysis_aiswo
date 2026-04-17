@@ -50,6 +50,20 @@ def _error_code_from_status(status_code: int) -> str:
     return f"HTTP_{status_code}"
 
 
+def _sanitize_errors(errors: list) -> list:
+    return [
+        {
+            **e,
+            "ctx": {**e["ctx"], "error": str(e["ctx"]["error"])}
+            if "ctx" in e and "error" in e["ctx"]
+            else e.get("ctx", {}),
+        }
+        if "ctx" in e
+        else e
+        for e in errors
+    ]
+
+
 @asynccontextmanager
 async def _lifespan(_app: FastAPI):
     yield
@@ -85,7 +99,7 @@ def create_app(*, init_infraestructure: bool = True) -> FastAPI:
             status_code=422,
             code="VALIDATION_ERROR",
             message="Invalid request payload or parameters.",
-            details={"errors": exc.errors()},
+            details={"errors": _sanitize_errors(exc.errors())},
         )
 
     @app.exception_handler(Exception)

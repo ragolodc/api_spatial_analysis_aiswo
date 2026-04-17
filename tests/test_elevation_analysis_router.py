@@ -87,9 +87,10 @@ def test_run_zone_elevation_analysis_maps_zone_not_found(client, monkeypatch) ->
         _API_V1_PREFIX + "/processes/analyze-zone-elevation/execution",
         json={"inputs": {"zone_id": str(uuid4())}},
     )
+    print("----------------------------------------------")
 
     assert response.status_code == 404
-    assert response.json()["detail"] == "Zone does not exist"
+    assert response.json()["message"] == "Zone does not exist"
 
 
 def test_generate_zone_contours_maps_dem_not_available(client, monkeypatch) -> None:
@@ -109,7 +110,7 @@ def test_generate_zone_contours_maps_dem_not_available(client, monkeypatch) -> N
     )
 
     assert response.status_code == 503
-    assert response.json()["detail"] == "DEM source unavailable"
+    assert response.json()["message"] == "DEM source unavailable"
 
 
 def test_get_zone_contours_returns_feature_collection(client, monkeypatch) -> None:

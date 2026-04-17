@@ -45,7 +45,7 @@ def test_get_zone_returns_404_when_not_found(client, monkeypatch) -> None:
     response = client.get(f"{_API_V1_PREFIX}/collections/zones/items/{uuid4()}")
 
     assert response.status_code == 404
-    assert response.json()["detail"] == "Zone not found"
+    assert response.json()["message"] == "Zone not found"
 
 
 def test_create_zone_returns_created_feature(client, monkeypatch) -> None:

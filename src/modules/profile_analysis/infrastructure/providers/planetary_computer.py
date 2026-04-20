@@ -1,4 +1,5 @@
 import math
+from uuid import UUID
 
 import rioxarray  # noqa: F401 — registers the rioxarray accessor on xarray
 from shapely.geometry import Polygon
@@ -14,17 +15,10 @@ _RESOLUTION_M = 30.0
 class PlanetaryComputerProfileElevationProvider:
     """DEM batch sampler for generated profile points using Planetary Computer."""
 
-    def __init__(self, catalog_url: str, collection: str) -> None:
+    def __init__(self, catalog_url: str, collection: str, source_id: UUID) -> None:
         self._catalog_url = catalog_url
         self._collection = collection
-
-    @property
-    def name(self) -> str:
-        return _PROVIDER_NAME
-
-    @property
-    def resolution_m(self) -> float:
-        return _RESOLUTION_M
+        self._source_id = source_id
 
     def sample_points(self, points: list[ProfileSamplePoint]) -> list[ProfileSamplePoint]:
         if not points:

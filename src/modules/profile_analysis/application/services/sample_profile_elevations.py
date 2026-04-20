@@ -1,9 +1,10 @@
-from src.modules.profile_analysis.domain.ports import ProfileElevationProvider
+from uuid import UUID
+
 from src.modules.profile_analysis.domain.entities import (
     LongitudinalProfile,
-    ProfileSamplePoint,
     TransverseProfile,
 )
+from src.modules.profile_analysis.domain.ports import ProfileElevationProvider
 
 
 class SampleProfileElevations:
@@ -13,12 +14,8 @@ class SampleProfileElevations:
         self._provider = provider
 
     @property
-    def provider_name(self) -> str:
-        return self._provider.name
-
-    @property
-    def resolution_m(self) -> float:
-        return self._provider.resolution_m
+    def source_id(self) -> UUID:
+        return self._provider.source_id
 
     def sample_transverse(self, profiles: list[TransverseProfile]) -> list[TransverseProfile]:
         return [

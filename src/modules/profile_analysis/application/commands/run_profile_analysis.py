@@ -1,7 +1,7 @@
 from src.modules.profile_analysis.application.services import (
     GenerateLongitudinalProfiles,
-    SampleProfileElevations,
     GenerateTransverseProfiles,
+    SampleProfileElevations,
 )
 from src.modules.profile_analysis.domain.entities import (
     PivotKind,
@@ -31,7 +31,9 @@ class RunProfileAnalysis:
         longitudinal_profiles = self._longitudinal_generator.execute(analysis_input)
 
         sampled_transverse_profiles = self._elevation_sampler.sample_transverse(transverse_profiles)
-        sampled_longitudinal_profiles = self._elevation_sampler.sample_longitudinal(longitudinal_profiles)
+        sampled_longitudinal_profiles = self._elevation_sampler.sample_longitudinal(
+            longitudinal_profiles
+        )
 
         total_points = sum(len(p.points) for p in sampled_transverse_profiles) + sum(
             len(p.points) for p in sampled_longitudinal_profiles
@@ -40,8 +42,7 @@ class RunProfileAnalysis:
         return ProfileAnalysisResult(
             request_id=request.request_id,
             zone_id=request.zone_id,
-            provider=self._elevation_sampler.provider_name,
-            resolution_m=self._elevation_sampler.resolution_m,
+            source_id=self._elevation_sampler.source_id,
             transverse_profiles=sampled_transverse_profiles,
             longitudinal_profiles=sampled_longitudinal_profiles,
             total_points=total_points,

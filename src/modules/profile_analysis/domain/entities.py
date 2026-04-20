@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from enum import StrEnum
 from datetime import datetime
+from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
@@ -71,8 +71,7 @@ class LongitudinalProfile:
 class ProfileAnalysisResult:
     request_id: UUID
     zone_id: UUID
-    provider: str
-    resolution_m: float
+    source_id: UUID
     transverse_profiles: list[TransverseProfile]
     longitudinal_profiles: list[LongitudinalProfile]
     total_points: int

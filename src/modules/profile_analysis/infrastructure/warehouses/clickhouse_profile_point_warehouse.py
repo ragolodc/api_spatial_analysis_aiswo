@@ -61,8 +61,7 @@ class ClickHouseProfilePointWarehouse:
                         point.longitude,
                         point.latitude,
                         point.elevation_m,
-                        result.provider,
-                        result.resolution_m,
+                        str(result.source_id),
                     ]
                 )
 
@@ -81,8 +80,7 @@ class ClickHouseProfilePointWarehouse:
                         point.longitude,
                         point.latitude,
                         point.elevation_m,
-                        result.provider,
-                        result.resolution_m,
+                        str(result.source_id),
                     ]
                 )
 
@@ -102,8 +100,7 @@ class ClickHouseProfilePointWarehouse:
                     "longitude",
                     "latitude",
                     "elevation_m",
-                    "provider",
-                    "resolution_m",
+                    "source_id",
                 ],
             )
 
@@ -220,8 +217,7 @@ class ClickHouseProfilePointWarehouse:
                 longitude Float64,
                 latitude Float64,
                 elevation_m Nullable(Float64),
-                provider LowCardinality(String),
-                resolution_m Float64
+                source_id UUID
             )
             ENGINE = MergeTree
             ORDER BY (request_id, profile_type, profile_key, point_index)

@@ -66,6 +66,7 @@ def get_profile_elevation_provider(db: Session) -> PlanetaryComputerProfileEleva
     return PlanetaryComputerProfileElevationProvider(
         catalog_url=source.source_url,
         collection=source.collection,
+        source_id=source.id,
     )
 
 

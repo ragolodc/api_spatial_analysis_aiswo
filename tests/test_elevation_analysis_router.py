@@ -17,6 +17,7 @@ _API_V1_PREFIX = "/api/v1"
 
 def _sample_analysis() -> ElevationAnalysis:
     analysis_id = uuid4()
+    source_id = uuid4()
     point = ElevationPoint(
         id=uuid4(),
         analysis_id=analysis_id,
@@ -28,8 +29,7 @@ def _sample_analysis() -> ElevationAnalysis:
     return ElevationAnalysis(
         id=analysis_id,
         zone_id=uuid4(),
-        provider="planetary_computer",
-        resolution_m=30.0,
+        source_id=source_id,
         analyzed_at=datetime.now(timezone.utc),
         points=[point],
     )
@@ -39,7 +39,7 @@ def _sample_contour(zone_id) -> ElevationContour:
     return ElevationContour(
         id=uuid4(),
         zone_id=zone_id,
-        provider="planetary_computer",
+        source_id=uuid4(),
         interval_m=50.0,
         elevation_m=2500.0,
         geometry=GeoMultiLineString(coordinates=[[[-74.2, 4.5], [-74.1, 4.55], [-74.0, 4.6]]]),
@@ -68,7 +68,7 @@ def test_run_zone_elevation_analysis_returns_feature(client, monkeypatch) -> Non
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["properties"]["provider"] == "planetary_computer"
+    assert payload["properties"]["source_id"] == str(analysis.source_id)
     assert len(payload["characteristic_points"]) == 1
 
 

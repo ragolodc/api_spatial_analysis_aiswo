@@ -1,10 +1,10 @@
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from src.modules.profile_analysis.application.commands import RunProfileAnalysis
 from src.modules.profile_analysis.application.services import (
     GenerateLongitudinalProfiles,
-    SampleProfileElevations,
     GenerateTransverseProfiles,
+    SampleProfileElevations,
 )
 from src.modules.profile_analysis.domain.entities import (
     PivotKind,
@@ -12,15 +12,13 @@ from src.modules.profile_analysis.domain.entities import (
     ProfileAnalysisJobRequest,
 )
 
+_FAKE_SOURCE_ID = uuid4()
+
 
 class FakeElevationProvider:
     @property
-    def name(self) -> str:
-        return "fake_dem"
-
-    @property
-    def resolution_m(self) -> float:
-        return 5.0
+    def source_id(self) -> UUID:
+        return _FAKE_SOURCE_ID
 
     def sample_points(self, points):
         sampled = []
@@ -107,7 +105,6 @@ def test_run_profile_analysis_orchestrates_both_generators() -> None:
 
     assert len(result.transverse_profiles) == 2
     assert len(result.longitudinal_profiles) == 4
-    assert result.provider == "fake_dem"
-    assert result.resolution_m == 5.0
+    assert result.source_id == _FAKE_SOURCE_ID
     assert result.transverse_profiles[0].points[0].elevation_m == 1.0
     assert result.total_points > 0

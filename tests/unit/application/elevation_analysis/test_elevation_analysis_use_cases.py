@@ -26,13 +26,12 @@ class FakeZoneReader:
 
 
 class FakeAnalysisProvider:
+    def __init__(self) -> None:
+        self.source_id = uuid4()
+
     @property
     def name(self) -> str:
         return "planetary_computer"
-
-    @property
-    def resolution_m(self) -> float:
-        return 30.0
 
     def get_characteristic_points(self, polygon: GeoPolygon):
         return [
@@ -87,9 +86,7 @@ class FakeContourRepository:
 
 
 def _sample_polygon() -> GeoPolygon:
-    return GeoPolygon(
-        coordinates=[[[-74.2, 4.5], [-74.0, 4.5], [-74.0, 4.7], [-74.2, 4.5]]]
-    )
+    return GeoPolygon(coordinates=[[[-74.2, 4.5], [-74.0, 4.5], [-74.0, 4.7], [-74.2, 4.5]]])
 
 
 def test_run_zone_elevation_analysis_raises_when_zone_missing() -> None:
@@ -116,8 +113,7 @@ def test_run_zone_elevation_analysis_saves_analysis_with_points() -> None:
 
     assert repo.saved_analysis is not None
     assert analysis.zone_id == zone_id
-    assert analysis.provider == "planetary_computer"
-    assert analysis.resolution_m == 30.0
+    assert analysis.source_id == use_case._provider.source_id
     assert len(analysis.points) == 3
     assert {p.point_type for p in analysis.points} == {
         PointType.HIGHEST,
@@ -151,7 +147,7 @@ def test_generate_zone_contours_replaces_and_saves_contours() -> None:
     assert contour_repo.deleted_zone_id == zone_id
     assert len(contours) == 1
     contour = contours[0]
-    assert contour.provider == "planetary_computer"
+    assert contour.source_id == use_case._provider.source_id
     assert contour.interval_m == 25.0
     assert contour.elevation_m == 2500.0
     assert isinstance(contour.geometry, GeoMultiLineString)
@@ -165,8 +161,7 @@ def test_list_zone_analyses_delegates_repository_query() -> None:
         ElevationAnalysis(
             id=uuid4(),
             zone_id=zone_id,
-            provider="planetary_computer",
-            resolution_m=30.0,
+            source_id=uuid4(),
             analyzed_at=datetime.now(timezone.utc),
             points=[],
         )
@@ -185,7 +180,7 @@ def test_get_zone_contours_delegates_repository_query() -> None:
         ElevationContour(
             id=uuid4(),
             zone_id=zone_id,
-            provider="planetary_computer",
+            source_id=uuid4(),
             interval_m=50.0,
             elevation_m=2500.0,
             geometry=GeoMultiLineString(coordinates=[[[-74.2, 4.5], [-74.1, 4.55]]]),

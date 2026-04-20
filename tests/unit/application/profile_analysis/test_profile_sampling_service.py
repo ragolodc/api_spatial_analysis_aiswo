@@ -1,3 +1,5 @@
+from uuid import UUID, uuid4
+
 from src.modules.profile_analysis.application.services import SampleProfileElevations
 from src.modules.profile_analysis.domain.entities import (
     LongitudinalProfile,
@@ -5,15 +7,13 @@ from src.modules.profile_analysis.domain.entities import (
     TransverseProfile,
 )
 
+_FAKE_SOURCE_ID = uuid4()
+
 
 class FakeElevationProvider:
     @property
-    def name(self) -> str:
-        return "fake_dem"
-
-    @property
-    def resolution_m(self) -> float:
-        return 2.5
+    def source_id(self) -> UUID:
+        return _FAKE_SOURCE_ID
 
     def sample_points(self, points):
         return [
@@ -43,8 +43,7 @@ def test_sample_profile_elevations_enriches_transverse_profiles() -> None:
     result = service.sample_transverse([profile])
 
     assert result[0].points[0].elevation_m == 123.4
-    assert service.provider_name == "fake_dem"
-    assert service.resolution_m == 2.5
+    assert service.source_id == _FAKE_SOURCE_ID
 
 
 def test_sample_profile_elevations_enriches_longitudinal_profiles() -> None:

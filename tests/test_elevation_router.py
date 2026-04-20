@@ -17,6 +17,7 @@ def test_list_elevation_sources_returns_items(client, monkeypatch) -> None:
         srid=4326,
         source_url="https://planetarycomputer.microsoft.com/api/stac/v1",
         collection="cop-dem-glo-30",
+        resolution_m=30.0,
         is_active=True,
         created_at=datetime.now(timezone.utc),
     )

@@ -30,6 +30,7 @@ def get_elevation_provider(db: Session) -> PlanetaryComputerElevationProvider:
     return PlanetaryComputerElevationProvider(
         catalog_url=source.source_url,
         collection=source.collection,
+        source_id=source.id,
     )
 
 

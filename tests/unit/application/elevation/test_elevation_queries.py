@@ -38,9 +38,7 @@ class FakeElevationSourceRepository:
 
 def test_get_highest_point_delegates_to_provider() -> None:
     provider = FakeElevationProvider()
-    polygon = GeoPolygon(
-        coordinates=[[[-74.2, 4.5], [-74.0, 4.5], [-74.0, 4.7], [-74.2, 4.5]]]
-    )
+    polygon = GeoPolygon(coordinates=[[[-74.2, 4.5], [-74.0, 4.5], [-74.0, 4.7], [-74.2, 4.5]]])
 
     point, elevation = GetHighestPointInPolygon(provider).execute(polygon)
 
@@ -67,6 +65,7 @@ def test_list_elevation_sources_returns_repository_items() -> None:
         srid=4326,
         source_url="https://planetarycomputer.microsoft.com/api/stac/v1",
         collection="cop-dem-glo-30",
+        resolution_m=30.0,
         is_active=True,
         created_at=datetime.now(timezone.utc),
     )

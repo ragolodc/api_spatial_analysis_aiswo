@@ -1,3 +1,4 @@
+import re
 from uuid import UUID
 
 import clickhouse_connect
@@ -11,6 +12,7 @@ from src.modules.profile_analysis.domain.entities import (
 )
 
 _MAX_QUERY_LIMIT = 10_000
+_SAFE_IDENTIFIER = re.compile(r"^[a-zA-Z0-9_]+$")
 
 
 class ClickHouseProfilePointWarehouse:
@@ -24,6 +26,8 @@ class ClickHouseProfilePointWarehouse:
         password: str,
         database: str,
     ) -> None:
+        if not _SAFE_IDENTIFIER.match(database):
+            raise ValueError(f"Invalid database name: {database!r}")
         self._database = database
         self._client = clickhouse_connect.get_client(
             host=host,
@@ -33,44 +37,54 @@ class ClickHouseProfilePointWarehouse:
         )
         self._ensure_schema()
 
+    def __enter__(self) -> "ClickHouseProfilePointWarehouse":
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        self._client.close()
+
     def store_result(self, result: ProfileAnalysisResult) -> None:
         rows: list[list] = []
 
         for profile in result.transverse_profiles:
             for point_index, point in enumerate(profile.points):
-                rows.append([
-                    str(result.request_id),
-                    str(result.zone_id),
-                    ProfileType.TRANSVERSE,
-                    f"radius:{profile.radius_m}",
-                    point_index,
-                    profile.radius_m,
-                    point.angle_deg,
-                    point.distance_m,
-                    point.longitude,
-                    point.latitude,
-                    point.elevation_m,
-                    result.provider,
-                    result.resolution_m,
-                ])
+                rows.append(
+                    [
+                        str(result.request_id),
+                        str(result.zone_id),
+                        ProfileType.TRANSVERSE,
+                        f"radius:{profile.radius_m}",
+                        point_index,
+                        profile.radius_m,
+                        point.angle_deg,
+                        point.distance_m,
+                        point.longitude,
+                        point.latitude,
+                        point.elevation_m,
+                        result.provider,
+                        result.resolution_m,
+                    ]
+                )
 
         for profile in result.longitudinal_profiles:
             for point_index, point in enumerate(profile.points):
-                rows.append([
-                    str(result.request_id),
-                    str(result.zone_id),
-                    ProfileType.LONGITUDINAL,
-                    f"azimuth:{profile.azimuth_deg}",
-                    point_index,
-                    point.radius_m,
-                    profile.azimuth_deg,
-                    point.distance_m,
-                    point.longitude,
-                    point.latitude,
-                    point.elevation_m,
-                    result.provider,
-                    result.resolution_m,
-                ])
+                rows.append(
+                    [
+                        str(result.request_id),
+                        str(result.zone_id),
+                        ProfileType.LONGITUDINAL,
+                        f"azimuth:{profile.azimuth_deg}",
+                        point_index,
+                        point.radius_m,
+                        profile.azimuth_deg,
+                        point.distance_m,
+                        point.longitude,
+                        point.latitude,
+                        point.elevation_m,
+                        result.provider,
+                        result.resolution_m,
+                    ]
+                )
 
         if rows:
             self._client.insert(

@@ -7,10 +7,11 @@ from uuid import UUID
 import src.shared.db.registry  # noqa: F401 — ensures all ORM models are registered before SQLAlchemy resolves FKs
 from src.modules.profile_analysis.application.commands import (
     PersistProfileAnalysisJob,
+    PersistProfileAnalysisPoints,
 )
 from src.modules.profile_analysis.domain.entities import ProfileAnalysisJobRequest
 from src.modules.profile_analysis.infrastructure.factories import (
-    get_persist_profile_analysis_points,
+    get_profile_analysis_point_warehouse,
     get_run_profile_analysis,
 )
 from src.modules.profile_analysis.infrastructure.persistence import (
@@ -48,7 +49,11 @@ def generate_zone_profiles(
                 payload=payload,
             )
             result = get_run_profile_analysis(db).execute(job_request)
-            get_persist_profile_analysis_points().execute(result)
+
+            warehouse = get_profile_analysis_point_warehouse()
+            with warehouse:
+                PersistProfileAnalysisPoints(warehouse).execute(result)
+
             result_payload = {
                 "request_id": str(result.request_id),
                 "zone_id": str(result.zone_id),

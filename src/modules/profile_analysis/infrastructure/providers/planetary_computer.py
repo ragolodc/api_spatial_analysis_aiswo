@@ -20,6 +20,10 @@ class PlanetaryComputerProfileElevationProvider:
         self._collection = collection
         self._source_id = source_id
 
+    @property
+    def source_id(self) -> UUID:
+        return self._source_id
+
     def sample_points(self, points: list[ProfileSamplePoint]) -> list[ProfileSamplePoint]:
         if not points:
             return []

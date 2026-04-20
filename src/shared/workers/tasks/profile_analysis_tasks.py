@@ -57,8 +57,7 @@ def generate_zone_profiles(
             result_payload = {
                 "request_id": str(result.request_id),
                 "zone_id": str(result.zone_id),
-                "provider": result.provider,
-                "resolution_m": result.resolution_m,
+                "source_id": str(result.source_id),
                 "transverse_profiles": len(result.transverse_profiles),
                 "longitudinal_profiles": len(result.longitudinal_profiles),
                 "total_points": result.total_points,

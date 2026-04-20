@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from src.modules.elevation.domain.exceptions import ElevationDataNotFound
+from src.modules.elevation.domain.exceptions import (
+    ElevationDataNotFound,
+    ElevationSourceNotConfigured,
+)
 from src.modules.elevation.domain.value_objects import GeoPoint
 from src.modules.elevation.infrastructure.factories import (
     get_get_highest_point,
@@ -33,6 +36,8 @@ def execute_highest_point(
             if not polygon:
                 raise HTTPException(status_code=404, detail="Zone not found")
         point, elevation = get_get_highest_point(db).execute(polygon)
+    except ElevationSourceNotConfigured as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except ElevationDataNotFound as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -53,6 +58,8 @@ def execute_point_elevation(
             latitude=body.inputs.point.coordinates[1],
         )
         elevation = get_get_point_elevation(db).execute(point)
+    except ElevationSourceNotConfigured as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except ElevationDataNotFound as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 

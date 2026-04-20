@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from src.modules.elevation_analysis.domain.exceptions import (
     DemNotAvailable,
     ElevationAnalysisException,
+    ElevationSourceNotConfigured,
     ZoneNotFound,
 )
 from src.modules.elevation_analysis.infrastructure.factories import (
@@ -39,6 +40,8 @@ def run_zone_elevation_analysis(
 ) -> ElevationAnalysisFeature:
     try:
         analysis = get_run_zone_elevation_analysis(db).execute(zone_id=body.inputs.zone_id)
+    except ElevationSourceNotConfigured as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except ZoneNotFound as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except DemNotAvailable as exc:
@@ -64,6 +67,8 @@ def generate_zone_contours(
             zone_id=body.inputs.zone_id,
             interval_m=body.inputs.interval_m,
         )
+    except ElevationSourceNotConfigured as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except ZoneNotFound as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except DemNotAvailable as exc:

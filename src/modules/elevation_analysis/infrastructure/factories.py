@@ -1,6 +1,5 @@
 """Dependency injection factories for elevation analysis module."""
 
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from src.modules.elevation.infrastructure.persistence import SQLAlchemyElevationSourceRepository
@@ -12,6 +11,7 @@ from src.modules.elevation_analysis.application.queries import (
     GetZoneContours,
     ListZoneAnalyses,
 )
+from src.modules.elevation_analysis.domain.exceptions import ElevationSourceNotConfigured
 from src.modules.elevation_analysis.infrastructure.persistence import (
     SQLAlchemyElevationAnalysisRepository,
     SQLAlchemyElevationContourRepository,
@@ -27,10 +27,10 @@ def get_dem_provider(db: Session) -> PlanetaryComputerAnalysisProvider:
     repo = SQLAlchemyElevationSourceRepository(db)
     source = repo.find_active()
     if source is None:
-        raise HTTPException(status_code=503, detail="No active elevation source configured")
+        raise ElevationSourceNotConfigured("No active elevation source configured")
     if not source.source_url or not source.collection:
-        raise HTTPException(
-            status_code=503, detail="Active elevation source is missing catalog_url or collection"
+        raise ElevationSourceNotConfigured(
+            "Active elevation source is missing catalog_url or collection"
         )
     return PlanetaryComputerAnalysisProvider(
         catalog_url=source.source_url,

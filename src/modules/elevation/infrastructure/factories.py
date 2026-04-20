@@ -1,6 +1,5 @@
 """Dependency injection factories for elevation module."""
 
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from src.modules.elevation.application.queries import (
@@ -8,6 +7,7 @@ from src.modules.elevation.application.queries import (
     GetPointElevation,
     ListElevationSources,
 )
+from src.modules.elevation.domain.exceptions import ElevationSourceNotConfigured
 from src.modules.elevation.infrastructure.persistence import (
     SQLAlchemyElevationSourceRepository,
 )
@@ -22,9 +22,11 @@ def get_elevation_provider(db: Session) -> PlanetaryComputerElevationProvider:
     repo = SQLAlchemyElevationSourceRepository(db)
     source = repo.find_active()
     if source is None:
-        raise HTTPException(status_code=503, detail="No active elevation source configured")
+        raise ElevationSourceNotConfigured("No active elevation source configured")
     if not source.source_url or not source.collection:
-        raise HTTPException(status_code=503, detail="Active elevation source is missing catalog_url or collection")
+        raise ElevationSourceNotConfigured(
+            "Active elevation source is missing catalog_url or collection"
+        )
     return PlanetaryComputerElevationProvider(
         catalog_url=source.source_url,
         collection=source.collection,
@@ -49,4 +51,3 @@ def get_list_elevation_sources(db: Session) -> ListElevationSources:
 def get_zone_geometry_reader(db: Session) -> SQLAlchemyZoneGeometryAdapter:
     """Factory for ZoneGeometryReader ACL adapter."""
     return SQLAlchemyZoneGeometryAdapter(db)
-

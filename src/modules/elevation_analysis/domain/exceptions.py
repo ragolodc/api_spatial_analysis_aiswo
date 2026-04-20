@@ -17,3 +17,9 @@ class DemNotAvailable(ElevationAnalysisException):
     """Raised when DEM data is not available for given geometry."""
 
     pass
+
+
+class ElevationSourceNotConfigured(ElevationAnalysisException):
+    """Raised when no active elevation source is available."""
+
+    pass

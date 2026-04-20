@@ -1,6 +1,5 @@
 """Dependency injection factories for profile analysis module."""
 
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from src.modules.elevation.infrastructure.persistence import SQLAlchemyElevationSourceRepository
@@ -17,6 +16,7 @@ from src.modules.profile_analysis.application.commands import (
     RunProfileAnalysis,
 )
 from src.modules.profile_analysis.application.services import SampleProfileElevations
+from src.modules.profile_analysis.domain.exceptions import ElevationSourceNotConfigured
 from src.modules.profile_analysis.infrastructure.dispatchers import (
     CeleryProfileAnalysisDispatcher,
 )
@@ -58,9 +58,11 @@ def get_profile_elevation_provider(db: Session) -> PlanetaryComputerProfileEleva
     repo = SQLAlchemyElevationSourceRepository(db)
     source = repo.find_active()
     if source is None:
-        raise HTTPException(status_code=503, detail="No active elevation source configured")
+        raise ElevationSourceNotConfigured("No active elevation source configured")
     if not source.source_url or not source.collection:
-        raise HTTPException(status_code=503, detail="Active elevation source is missing catalog_url or collection")
+        raise ElevationSourceNotConfigured(
+            "Active elevation source is missing catalog_url or collection"
+        )
     return PlanetaryComputerProfileElevationProvider(
         catalog_url=source.source_url,
         collection=source.collection,

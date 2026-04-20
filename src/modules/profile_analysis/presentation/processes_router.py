@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 from uuid import UUID
 
-from src.modules.profile_analysis.domain.entities import ProfileType
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from src.modules.profile_analysis.domain.entities import ProfileAnalysisJob, ProfileType
+from src.modules.profile_analysis.domain.exceptions import ElevationSourceNotConfigured
 from src.modules.profile_analysis.infrastructure.factories import (
     get_get_profile_analysis_analytics,
     get_get_profile_analysis_job,
@@ -20,7 +22,6 @@ from src.modules.profile_analysis.presentation.schemas import (
     ProfileSummaryResponse,
     QueueProfileAnalysisRequest,
 )
-from src.modules.profile_analysis.domain.entities import ProfileAnalysisJob
 from src.shared.config import settings
 from src.shared.db.session import get_db
 
@@ -54,18 +55,21 @@ def queue_profile_analysis(
     body: QueueProfileAnalysisRequest,
     db: Session = Depends(get_db),
 ) -> ProfileAnalysisJobAccepted:
-    max_points = settings.profile_analysis_max_points
-    if body.inputs.estimated_points and body.inputs.estimated_points > max_points:
-        raise HTTPException(
-            status_code=400,
-            detail=f"estimated_points exceeds configured limit ({max_points})",
-        )
+    try:
+        max_points = settings.profile_analysis_max_points
+        if body.inputs.estimated_points and body.inputs.estimated_points > max_points:
+            raise HTTPException(
+                status_code=400,
+                detail=f"estimated_points exceeds configured limit ({max_points})",
+            )
 
-    payload = body.model_dump(mode="json")
-    request_id = get_queue_profile_analysis(db).execute(
-        zone_id=body.inputs.zone_id,
-        payload=payload,
-    )
+        payload = body.model_dump(mode="json")
+        request_id = get_queue_profile_analysis(db).execute(
+            zone_id=body.inputs.zone_id,
+            payload=payload,
+        )
+    except ElevationSourceNotConfigured as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     return ProfileAnalysisJobAccepted(
         request_id=request_id,
         status="queued",
@@ -121,7 +125,10 @@ def get_profile_analysis_points(
     offset: int = 0,
 ) -> ProfilePointsResponse:
     if limit < _POINTS_MIN_LIMIT or limit > _POINTS_MAX_LIMIT:
-        raise HTTPException(status_code=400, detail=f"limit must be between {_POINTS_MIN_LIMIT} and {_POINTS_MAX_LIMIT}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"limit must be between {_POINTS_MIN_LIMIT} and {_POINTS_MAX_LIMIT}",
+        )
     if offset < 0:
         raise HTTPException(status_code=400, detail="offset must be >= 0")
 

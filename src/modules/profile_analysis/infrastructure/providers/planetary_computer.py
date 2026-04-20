@@ -1,18 +1,14 @@
 import math
 
-import planetary_computer
-import pystac_client
 import rioxarray  # noqa: F401 — registers the rioxarray accessor on xarray
-from rioxarray.merge import merge_arrays
 from shapely.geometry import Polygon
 
 from src.modules.profile_analysis.domain.entities import ProfileSamplePoint
 from src.modules.profile_analysis.domain.exceptions import DemNotAvailable
+from src.shared.infrastructure.dem.stac_dem_loader import fetch_dem_tiles, merge_dem_tiles
 
-_ASSET_KEY = "data"
 _PROVIDER_NAME = "planetary_computer"
 _RESOLUTION_M = 30.0
-_MAX_DEM_TILES = 16
 
 
 class PlanetaryComputerProfileElevationProvider:
@@ -35,26 +31,11 @@ class PlanetaryComputerProfileElevationProvider:
             return []
 
         bbox_polygon = self._build_bbox_polygon(points)
-        catalog = pystac_client.Client.open(
-            self._catalog_url,
-            modifier=planetary_computer.sign_inplace,
-        )
-        items = list(
-            catalog.search(
-                collections=[self._collection],
-                intersects=bbox_polygon,
-                max_items=_MAX_DEM_TILES,
-            ).items()
-        )
-        if not items:
+        tiles = fetch_dem_tiles(self._catalog_url, self._collection, bbox_polygon)
+        if not tiles:
             raise DemNotAvailable("No DEM coverage found for the requested profile points")
-
-        tiles = [
-            rioxarray.open_rasterio(item.assets[_ASSET_KEY].href, masked=True, lock=False)
-            for item in items
-        ]
         try:
-            dem = merge_arrays(tiles) if len(tiles) > 1 else tiles[0]
+            dem = merge_dem_tiles(tiles)
             return [self._sample_point(dem, point) for point in points]
         finally:
             for tile in tiles:
@@ -62,7 +43,9 @@ class PlanetaryComputerProfileElevationProvider:
 
     def _sample_point(self, dem, point: ProfileSamplePoint) -> ProfileSamplePoint:
         raw_value = dem.sel(x=point.longitude, y=point.latitude, method="nearest").values[0]
-        elevation = None if (raw_value is None or math.isnan(float(raw_value))) else float(raw_value)
+        elevation = (
+            None if (raw_value is None or math.isnan(float(raw_value))) else float(raw_value)
+        )
         return ProfileSamplePoint(
             longitude=point.longitude,
             latitude=point.latitude,
@@ -75,12 +58,13 @@ class PlanetaryComputerProfileElevationProvider:
     def _build_bbox_polygon(self, points: list[ProfileSamplePoint]) -> dict:
         longitudes = [p.longitude for p in points]
         latitudes = [p.latitude for p in points]
-        polygon = Polygon([
-            (min(longitudes), min(latitudes)),
-            (max(longitudes), min(latitudes)),
-            (max(longitudes), max(latitudes)),
-            (min(longitudes), max(latitudes)),
-            (min(longitudes), min(latitudes)),
-        ])
+        polygon = Polygon(
+            [
+                (min(longitudes), min(latitudes)),
+                (max(longitudes), min(latitudes)),
+                (max(longitudes), max(latitudes)),
+                (min(longitudes), max(latitudes)),
+                (min(longitudes), min(latitudes)),
+            ]
+        )
         return {"type": "Polygon", "coordinates": [list(polygon.exterior.coords)]}
-

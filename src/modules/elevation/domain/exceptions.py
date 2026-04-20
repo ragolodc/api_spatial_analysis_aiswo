@@ -13,6 +13,12 @@ class ElevationDataNotFound(ElevationException):
     pass
 
 
+class DemNotAvailable(ElevationException):
+    """Raised when no DEM coverage is available for the requested profile points."""
+
+    pass
+
+
 class ElevationSourceNotConfigured(ElevationException):
     """Raised when no active elevation source is available."""
 

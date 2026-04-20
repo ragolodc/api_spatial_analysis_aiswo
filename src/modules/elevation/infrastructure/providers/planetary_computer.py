@@ -1,18 +1,12 @@
 from uuid import UUID
 
 import numpy as np
-import planetary_computer
-import pystac_client
 import rioxarray  # noqa: F401  — registers .rio accessor on xarray DataArray
-from rioxarray.merge import merge_arrays
 
-from src.modules.elevation.domain.exceptions import ElevationDataNotFound
+from src.modules.elevation.domain.exceptions import DemNotAvailable, ElevationDataNotFound
 from src.modules.elevation.domain.value_objects import Elevation, GeoPoint
 from src.shared.domain import GeoPolygon
-
-_ASSET_KEY = "data"
-_CLIP_CRS = "EPSG:4326"
-_MAX_DEM_TILES = 16
+from src.shared.infrastructure.dem.stac_dem_loader import clip_dem, fetch_dem_tiles, merge_dem_tiles
 
 
 class PlanetaryComputerElevationProvider:
@@ -21,33 +15,15 @@ class PlanetaryComputerElevationProvider:
         self._collection = collection
         self._source_id = source_id
 
-    def _find_items(self, geometry: dict) -> list:
-        catalog = pystac_client.Client.open(
-            self._catalog_url, modifier=planetary_computer.sign_inplace
-        )
-        items = list(
-            catalog.search(
-                collections=[self._collection], intersects=geometry, max_items=_MAX_DEM_TILES
-            ).items()
-        )
-        if not items:
-            raise ElevationDataNotFound("No DEM coverage found for the given geometry")
-        return items
-
     def get_highest_point(self, polygon: GeoPolygon) -> tuple[GeoPoint, Elevation]:
         geojson = polygon.to_geojson()
-        items = self._find_items(geojson)
+        tiles = fetch_dem_tiles(self._catalog_url, self._collection, geojson)
+        if not tiles:
+            raise ElevationDataNotFound("No DEM coverage found for the given geometry")
+        dem = merge_dem_tiles(tiles)
+        clipped = clip_dem(dem, geojson)
 
-        tiles = [
-            rioxarray.open_rasterio(item.assets[_ASSET_KEY].href, masked=True, lock=False)
-            for item in items
-        ]
-        dem = None
-        clipped = None
         try:
-            dem = merge_arrays(tiles) if len(tiles) > 1 else tiles[0]
-            clipped = dem.rio.clip([geojson], crs=_CLIP_CRS, drop=True)
-
             band = clipped.values[0]
             if np.isnan(band).all():
                 raise ElevationDataNotFound("DEM tiles for polygon only contain nodata values")
@@ -70,12 +46,17 @@ class PlanetaryComputerElevationProvider:
                 tile.close()
 
     def get_point_elevation(self, point: GeoPoint) -> Elevation:
-        items = self._find_items(point.to_geojson())
-        da = rioxarray.open_rasterio(items[0].assets[_ASSET_KEY].href, masked=True, lock=False)
+
+        tiles = fetch_dem_tiles(self._catalog_url, self._collection, point.to_geojson())
+        if not tiles:
+            raise DemNotAvailable("No DEM coverage found for the requested profile points")
+
+        da = tiles[0]
         try:
             value = float(da.sel(x=point.longitude, y=point.latitude, method="nearest").values[0])
             if np.isnan(value):
                 raise ElevationDataNotFound("DEM value at point is nodata")
             return Elevation(meters=value)
         finally:
-            da.close()
+            for tile in tiles:
+                tile.close()

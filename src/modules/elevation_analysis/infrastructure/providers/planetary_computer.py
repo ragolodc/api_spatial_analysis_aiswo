@@ -1,21 +1,16 @@
 from uuid import UUID
 
 import numpy as np
-import planetary_computer
-import pystac_client
 import rioxarray  # noqa: F401 — registers .rio accessor
 from contourpy import contour_generator
-from rioxarray.merge import merge_arrays
 from shapely.geometry import MultiLineString, mapping, shape
 
 from src.modules.elevation_analysis.domain.entities import PointType
 from src.modules.elevation_analysis.domain.exceptions import DemNotAvailable
 from src.shared.domain import GeoPolygon
+from src.shared.infrastructure.dem.stac_dem_loader import clip_dem, fetch_dem_tiles, merge_dem_tiles
 
-_ASSET_KEY = "data"
 _PROVIDER_NAME = "planetary_computer"
-_MAX_DEM_TILES = 16
-_CLIP_CRS = "EPSG:4326"
 
 
 class PlanetaryComputerAnalysisProvider:
@@ -40,23 +35,11 @@ class PlanetaryComputerAnalysisProvider:
     def _fetch_clipped_dem(self, polygon: GeoPolygon):
         """Descarga y recorta los tiles DEM que cubren el polígono."""
         geojson = polygon.to_geojson()
-        catalog = pystac_client.Client.open(
-            self._catalog_url, modifier=planetary_computer.sign_inplace
-        )
-        items = list(
-            catalog.search(
-                collections=[self._collection], intersects=geojson, max_items=_MAX_DEM_TILES
-            ).items()
-        )
-        if not items:
+        tiles = fetch_dem_tiles(self._catalog_url, self._collection, geojson)
+        if not tiles:
             raise DemNotAvailable("No DEM coverage found for the given geometry")
-
-        tiles = [
-            rioxarray.open_rasterio(item.assets[_ASSET_KEY].href, masked=True, lock=False)
-            for item in items
-        ]
-        dem = merge_arrays(tiles) if len(tiles) > 1 else tiles[0]
-        clipped = dem.rio.clip([geojson], crs=_CLIP_CRS, drop=True)
+        dem = merge_dem_tiles(tiles)
+        clipped = clip_dem(dem, geojson)
         return clipped, dem, tiles
 
     def get_characteristic_points(

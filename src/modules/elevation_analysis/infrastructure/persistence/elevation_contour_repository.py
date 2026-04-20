@@ -36,7 +36,9 @@ class SQLAlchemyElevationContourRepository(ElevationContourRepository):
         ]
         self._db.add_all(models)
         self._db.commit()
-        return contours
+        for model in models:
+            self._db.refresh(model)
+        return [self._to_entity(m) for m in models]
 
     def find_by_zone(self, zone_id: UUID) -> list[ElevationContour]:
         """Retrieve all contours for a zone, ordered by elevation ascending."""

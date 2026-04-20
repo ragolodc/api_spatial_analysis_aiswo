@@ -4,7 +4,6 @@ from src.modules.elevation_analysis.domain.entities import ElevationAnalysis, El
 from src.modules.elevation_analysis.presentation.schemas import (
     AnalysisProperties,
     ContourProperties,
-    ElevationAnalysisCollection,
     ElevationAnalysisFeature,
     ElevationContourCollection,
     ElevationContourFeature,
@@ -32,8 +31,7 @@ def analysis_to_feature(analysis: ElevationAnalysis) -> ElevationAnalysisFeature
         id=str(analysis.id),
         properties=AnalysisProperties(
             zone_id=analysis.zone_id,
-            provider=analysis.provider,
-            resolution_m=analysis.resolution_m,
+            source_id=analysis.source_id,
             analyzed_at=analysis.analyzed_at.isoformat(),
         ),
         characteristic_points=points,
@@ -49,7 +47,7 @@ def contours_to_collection(contours: list[ElevationContour]) -> ElevationContour
                 zone_id=c.zone_id,
                 elevation_m=c.elevation_m,
                 interval_m=c.interval_m,
-                provider=c.provider,
+                source_id=c.source_id,
                 generated_at=c.generated_at.isoformat(),
             ),
         )

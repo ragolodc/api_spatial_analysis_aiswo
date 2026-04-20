@@ -4,7 +4,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from src.modules.elevation.infrastructure.factories import get_list_elevation_sources
-from src.modules.elevation.presentation.schemas import ElevationSourceCollection, ElevationSourceItem
+from src.modules.elevation.presentation.schemas import (
+    ElevationSourceCollection,
+    ElevationSourceItem,
+)
 from src.shared.db.session import get_db
 
 router = APIRouter(prefix="/elevation-sources", tags=["Elevation Sources"])
@@ -21,6 +24,7 @@ def list_elevation_sources(db: Session = Depends(get_db)) -> ElevationSourceColl
                 srid=s.srid,
                 source_url=s.source_url,
                 collection=s.collection,
+                resolution_m=s.resolution_m,
                 is_active=s.is_active,
                 created_at=s.created_at.isoformat(),
             )

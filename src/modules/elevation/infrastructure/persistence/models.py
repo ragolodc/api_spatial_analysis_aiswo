@@ -1,7 +1,8 @@
 from datetime import datetime
-from uuid import UUID as UUIDType, uuid4
+from uuid import UUID as UUIDType
+from uuid import uuid4
 
-from sqlalchemy import Boolean, DateTime, Integer, String, func
+from sqlalchemy import Boolean, DateTime, Float, Integer, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -16,5 +17,8 @@ class ElevationSourceModel(Base):
     srid: Mapped[int] = mapped_column(Integer, nullable=False, default=4326)
     source_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     collection: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    resolution_m: Mapped[float] = mapped_column(Float, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )

@@ -74,8 +74,7 @@ class RunZoneElevationAnalysis:
         analysis = ElevationAnalysis(
             id=analysis_id,
             zone_id=zone_id,
-            provider=self._provider.name,
-            resolution_m=self._provider.resolution_m,
+            source_id=self._provider.source_id,
             analyzed_at=datetime.now(timezone.utc),
             points=points,
         )

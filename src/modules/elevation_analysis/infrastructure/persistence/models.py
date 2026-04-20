@@ -1,8 +1,10 @@
 from datetime import datetime
-from uuid import UUID as UUIDType, uuid4
+from uuid import UUID as UUIDType
+from uuid import uuid4
 
 from geoalchemy2 import Geometry
-from sqlalchemy import DateTime, Enum as SAEnum, Float, ForeignKey, String, func
+from sqlalchemy import DateTime, Float, ForeignKey, func
+from sqlalchemy import Enum as SAEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -17,8 +19,9 @@ class ElevationAnalysisModel(Base):
     zone_id: Mapped[UUIDType] = mapped_column(
         UUID(as_uuid=True), ForeignKey("zones.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    provider: Mapped[str] = mapped_column(String(100), nullable=False)
-    resolution_m: Mapped[float] = mapped_column(Float, nullable=False)
+    source_id: Mapped[UUIDType] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("elevation_sources.id"), nullable=False
+    )
     analyzed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -39,10 +42,14 @@ class ElevationPointModel(Base):
         index=True,
     )
     point_type: Mapped[PointType] = mapped_column(
-        SAEnum(*[e.value for e in PointType], name="elevation_point_type_enum", create_constraint=False),
+        SAEnum(
+            *[e.value for e in PointType], name="elevation_point_type_enum", create_constraint=False
+        ),
         nullable=False,
     )
-    geometry: Mapped[object] = mapped_column(Geometry(geometry_type="POINT", srid=4326), nullable=False)
+    geometry: Mapped[object] = mapped_column(
+        Geometry(geometry_type="POINT", srid=4326), nullable=False
+    )
     elevation_m: Mapped[float] = mapped_column(Float, nullable=False)
 
     analysis: Mapped["ElevationAnalysisModel"] = relationship(
@@ -57,7 +64,9 @@ class ElevationContourModel(Base):
     zone_id: Mapped[UUIDType] = mapped_column(
         UUID(as_uuid=True), ForeignKey("zones.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    provider: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_id: Mapped[UUIDType] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("elevation_sources.id"), nullable=False
+    )
     interval_m: Mapped[float] = mapped_column(Float, nullable=False)
     elevation_m: Mapped[float] = mapped_column(Float, nullable=False)
     geometry: Mapped[object] = mapped_column(

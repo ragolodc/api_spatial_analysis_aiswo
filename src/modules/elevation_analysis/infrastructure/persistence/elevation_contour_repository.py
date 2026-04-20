@@ -26,7 +26,7 @@ class SQLAlchemyElevationContourRepository(ElevationContourRepository):
             ElevationContourModel(
                 id=c.id,
                 zone_id=c.zone_id,
-                provider=c.provider,
+                source_id=c.source_id,
                 interval_m=c.interval_m,
                 elevation_m=c.elevation_m,
                 geometry=from_shape(shape(c.geometry.to_geojson()), srid=4326),
@@ -60,9 +60,11 @@ class SQLAlchemyElevationContourRepository(ElevationContourRepository):
         return ElevationContour(
             id=model.id,
             zone_id=model.zone_id,
-            provider=model.provider,
+            source_id=model.source_id,
             interval_m=model.interval_m,
             elevation_m=model.elevation_m,
-            geometry=GeoMultiLineString(coordinates=mapping(to_shape(model.geometry))["coordinates"]),
+            geometry=GeoMultiLineString(
+                coordinates=mapping(to_shape(model.geometry))["coordinates"]
+            ),
             generated_at=model.generated_at,
         )

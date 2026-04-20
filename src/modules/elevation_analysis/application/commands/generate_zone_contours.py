@@ -63,7 +63,7 @@ class GenerateZoneContours:
             ElevationContour(
                 id=uuid4(),
                 zone_id=zone_id,
-                provider=self._provider.name,
+                source_id=self._provider.source_id,
                 interval_m=interval_m,
                 elevation_m=elev,
                 geometry=GeoMultiLineString(coordinates=geojson["coordinates"]),

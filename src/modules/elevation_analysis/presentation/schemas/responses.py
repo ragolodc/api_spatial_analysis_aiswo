@@ -11,7 +11,6 @@ from src.modules.elevation_analysis.presentation.schemas.geometries import (
     PointGeometry,
 )
 
-
 # --- OGC Feature response schemas ---
 
 
@@ -36,8 +35,7 @@ class AnalysisProperties(BaseModel):
     """Properties of an elevation analysis."""
 
     zone_id: UUID
-    provider: str
-    resolution_m: float
+    source_id: UUID
     analyzed_at: str
 
 
@@ -65,7 +63,7 @@ class ContourProperties(BaseModel):
     zone_id: UUID
     elevation_m: float
     interval_m: float
-    provider: str
+    source_id: UUID
     generated_at: str
 
 

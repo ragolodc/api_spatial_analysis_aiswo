@@ -3,6 +3,7 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from src.modules.elevation.infrastructure.persistence import SQLAlchemyElevationSourceRepository
 from src.modules.elevation_analysis.application.commands import (
     GenerateZoneContours,
     RunZoneElevationAnalysis,
@@ -19,7 +20,6 @@ from src.modules.elevation_analysis.infrastructure.providers import (
     PlanetaryComputerAnalysisProvider,
 )
 from src.modules.zones.infrastructure.zone_geometry_adapter import SQLAlchemyZoneGeometryAdapter
-from src.modules.elevation.infrastructure.persistence import SQLAlchemyElevationSourceRepository
 
 
 def get_dem_provider(db: Session) -> PlanetaryComputerAnalysisProvider:
@@ -29,10 +29,13 @@ def get_dem_provider(db: Session) -> PlanetaryComputerAnalysisProvider:
     if source is None:
         raise HTTPException(status_code=503, detail="No active elevation source configured")
     if not source.source_url or not source.collection:
-        raise HTTPException(status_code=503, detail="Active elevation source is missing catalog_url or collection")
+        raise HTTPException(
+            status_code=503, detail="Active elevation source is missing catalog_url or collection"
+        )
     return PlanetaryComputerAnalysisProvider(
         catalog_url=source.source_url,
         collection=source.collection,
+        source_id=source.id,
     )
 
 

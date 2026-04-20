@@ -1,3 +1,5 @@
+from uuid import UUID
+
 import numpy as np
 import planetary_computer
 import pystac_client
@@ -14,10 +16,10 @@ _MAX_DEM_TILES = 16
 
 
 class PlanetaryComputerElevationProvider:
-
-    def __init__(self, catalog_url: str, collection: str) -> None:
+    def __init__(self, catalog_url: str, collection: str, source_id: UUID) -> None:
         self._catalog_url = catalog_url
         self._collection = collection
+        self._source_id = source_id
 
     def _find_items(self, geometry: dict) -> list:
         catalog = pystac_client.Client.open(

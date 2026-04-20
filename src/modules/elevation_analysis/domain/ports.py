@@ -1,12 +1,12 @@
 from typing import Protocol
 from uuid import UUID
 
-from src.shared.domain import GeoPolygon
 from src.modules.elevation_analysis.domain.entities import (
     ElevationAnalysis,
     ElevationContour,
     PointType,
 )
+from src.shared.domain import GeoPolygon
 
 
 class ElevationAnalysisProvider(Protocol):
@@ -14,7 +14,7 @@ class ElevationAnalysisProvider(Protocol):
     def name(self) -> str: ...
 
     @property
-    def resolution_m(self) -> float: ...
+    def source_id(self) -> UUID: ...
 
     def get_characteristic_points(
         self, polygon: GeoPolygon
@@ -22,9 +22,7 @@ class ElevationAnalysisProvider(Protocol):
         """Devuelve [(point_type, longitude, latitude, elevation_m), ...]."""
         ...
 
-    def get_contours(
-        self, polygon: GeoPolygon, interval_m: float
-    ) -> list[tuple[float, dict]]:
+    def get_contours(self, polygon: GeoPolygon, interval_m: float) -> list[tuple[float, dict]]:
         """Devuelve [(elevation_m, geojson_multilinestring), ...]."""
         ...
 

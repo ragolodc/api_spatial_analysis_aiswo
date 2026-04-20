@@ -20,6 +20,7 @@ class SQLAlchemyElevationSourceRepository(ElevationSourceRepository):
             srid=row.srid,
             source_url=row.source_url,
             collection=row.collection,
+            resolution_m=row.resolution_m,
             is_active=row.is_active,
             created_at=row.created_at,
         )

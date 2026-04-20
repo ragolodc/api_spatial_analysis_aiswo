@@ -30,8 +30,7 @@ class ElevationAnalysis:
 
     id: UUID
     zone_id: UUID
-    provider: str
-    resolution_m: float
+    source_id: UUID
     analyzed_at: datetime
     points: list[ElevationPoint] = field(default_factory=list)
 
@@ -42,8 +41,8 @@ class ElevationContour:
 
     id: UUID
     zone_id: UUID
-    provider: str
-    interval_m: float
+    source_id: UUID
     elevation_m: float
+    interval_m: float
     geometry: GeoMultiLineString  # GeoJSON MultiLineString
     generated_at: datetime

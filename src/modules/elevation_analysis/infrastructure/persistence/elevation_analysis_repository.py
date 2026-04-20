@@ -3,7 +3,7 @@
 from uuid import UUID
 
 from geoalchemy2.shape import from_shape, to_shape
-from shapely.geometry import Point, mapping
+from shapely.geometry import Point
 from sqlalchemy.orm import Session
 
 from src.modules.elevation_analysis.domain.entities import (
@@ -29,8 +29,7 @@ class SQLAlchemyElevationAnalysisRepository(ElevationAnalysisRepository):
         model = ElevationAnalysisModel(
             id=analysis.id,
             zone_id=analysis.zone_id,
-            provider=analysis.provider,
-            resolution_m=analysis.resolution_m,
+            source_id=analysis.source_id,
             analyzed_at=analysis.analyzed_at,
             points=[
                 ElevationPointModel(
@@ -79,8 +78,7 @@ class SQLAlchemyElevationAnalysisRepository(ElevationAnalysisRepository):
         return ElevationAnalysis(
             id=model.id,
             zone_id=model.zone_id,
-            provider=model.provider,
-            resolution_m=model.resolution_m,
+            source_id=model.source_id,
             analyzed_at=model.analyzed_at,
             points=points,
         )

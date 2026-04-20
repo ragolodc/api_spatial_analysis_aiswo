@@ -1,3 +1,5 @@
+from uuid import UUID
+
 import numpy as np
 import planetary_computer
 import pystac_client
@@ -12,7 +14,6 @@ from src.shared.domain import GeoPolygon
 
 _ASSET_KEY = "data"
 _PROVIDER_NAME = "planetary_computer"
-_RESOLUTION_M = 30.0
 _MAX_DEM_TILES = 16
 _CLIP_CRS = "EPSG:4326"
 
@@ -23,17 +24,18 @@ class PlanetaryComputerAnalysisProvider:
     desde Microsoft Planetary Computer.
     """
 
-    def __init__(self, catalog_url: str, collection: str) -> None:
+    def __init__(self, catalog_url: str, collection: str, source_id: UUID) -> None:
         self._catalog_url = catalog_url
         self._collection = collection
+        self._source_id = source_id
 
     @property
     def name(self) -> str:
         return _PROVIDER_NAME
 
     @property
-    def resolution_m(self) -> float:
-        return _RESOLUTION_M
+    def source_id(self) -> UUID:
+        return self._source_id
 
     def _fetch_clipped_dem(self, polygon: GeoPolygon):
         """Descarga y recorta los tiles DEM que cubren el polígono."""
@@ -76,30 +78,32 @@ class PlanetaryComputerAnalysisProvider:
             highest = float(band[row_hi, col_hi])
             if np.isnan(highest):
                 raise DemNotAvailable("Unable to determine highest elevation")
-            results.append((
-                PointType.HIGHEST,
-                float(clipped.x[col_hi]),
-                float(clipped.y[row_hi]),
-                highest,
-            ))
+            results.append(
+                (
+                    PointType.HIGHEST,
+                    float(clipped.x[col_hi]),
+                    float(clipped.y[row_hi]),
+                    highest,
+                )
+            )
 
             row_lo, col_lo = np.unravel_index(int(np.nanargmin(band)), band.shape)
             lowest = float(band[row_lo, col_lo])
             if np.isnan(lowest):
                 raise DemNotAvailable("Unable to determine lowest elevation")
-            results.append((
-                PointType.LOWEST,
-                float(clipped.x[col_lo]),
-                float(clipped.y[row_lo]),
-                lowest,
-            ))
+            results.append(
+                (
+                    PointType.LOWEST,
+                    float(clipped.x[col_lo]),
+                    float(clipped.y[row_lo]),
+                    lowest,
+                )
+            )
 
             poly_shape = shape(polygon.to_geojson())
             centroid = poly_shape.centroid
             elev_centroid = float(
-                clipped.sel(
-                    x=centroid.x, y=centroid.y, method="nearest"
-                ).values[0]
+                clipped.sel(x=centroid.x, y=centroid.y, method="nearest").values[0]
             )
             if np.isnan(elev_centroid):
                 raise DemNotAvailable("Unable to determine centroid elevation")
@@ -113,9 +117,7 @@ class PlanetaryComputerAnalysisProvider:
             for tile in tiles:
                 tile.close()
 
-    def get_contours(
-        self, polygon: GeoPolygon, interval_m: float
-    ) -> list[tuple[float, dict]]:
+    def get_contours(self, polygon: GeoPolygon, interval_m: float) -> list[tuple[float, dict]]:
         """
         Genera curvas de nivel del DEM recortado al polígono.
         Devuelve [(elevation_m, geojson_multilinestring), ...] por cada nivel.

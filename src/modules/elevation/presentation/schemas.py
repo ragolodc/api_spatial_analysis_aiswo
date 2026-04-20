@@ -51,6 +51,7 @@ class ElevationSourceItem(BaseModel):
     srid: int
     source_url: str | None
     collection: str | None
+    resolution_m: float
     is_active: bool
     created_at: str
 

@@ -1,11 +1,11 @@
 from typing import Any
 from uuid import UUID, uuid4
 
-from src.modules.profile_analysis.domain.entities import ProfileAnalysisJobRequest
-from src.modules.profile_analysis.domain.ports import ProfileAnalysisJobDispatcher
 from src.modules.profile_analysis.application.commands.persist_profile_analysis_job import (
     PersistProfileAnalysisJob,
 )
+from src.modules.profile_analysis.domain.entities import ProfileAnalysisJobRequest
+from src.modules.profile_analysis.domain.ports import ProfileAnalysisJobDispatcher
 
 
 class QueueProfileAnalysis:
@@ -29,12 +29,4 @@ class QueueProfileAnalysis:
                 payload=payload,
             )
         )
-        return request_id
-
-        request = ProfileAnalysisJobRequest(
-            request_id=request_id,
-            zone_id=zone_id,
-            payload=payload,
-        )
-        self._dispatcher.dispatch(request)
         return request_id

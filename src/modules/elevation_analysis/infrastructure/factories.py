@@ -11,7 +11,6 @@ from src.modules.elevation_analysis.application.queries import (
     GetZoneContours,
     ListZoneAnalyses,
 )
-from src.modules.elevation_analysis.domain.exceptions import ElevationSourceNotConfigured
 from src.modules.elevation_analysis.infrastructure.persistence import (
     SQLAlchemyElevationAnalysisRepository,
     SQLAlchemyElevationContourRepository,
@@ -20,6 +19,7 @@ from src.modules.elevation_analysis.infrastructure.providers import (
     PlanetaryComputerAnalysisProvider,
 )
 from src.modules.zones.infrastructure.zone_geometry_adapter import SQLAlchemyZoneGeometryAdapter
+from src.shared.domain.exceptions import ElevationSourceNotConfigured
 
 
 def get_dem_provider(db: Session) -> PlanetaryComputerAnalysisProvider:

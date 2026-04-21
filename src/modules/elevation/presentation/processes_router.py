@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 
 from src.modules.elevation.domain.exceptions import (
     ElevationDataNotFound,
-    ElevationSourceNotConfigured,
 )
 from src.modules.elevation.domain.value_objects import GeoPoint
 from src.modules.elevation.infrastructure.factories import (
@@ -19,6 +18,7 @@ from src.modules.elevation.presentation.schemas import (
 )
 from src.shared.db.session import get_db
 from src.shared.domain import GeoPolygon
+from src.shared.domain.exceptions import ElevationSourceNotConfigured
 
 router = APIRouter(prefix="/processes", tags=["OGC Processes - Elevation Queries"])
 

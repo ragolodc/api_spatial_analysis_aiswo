@@ -3,9 +3,10 @@ from uuid import UUID
 import numpy as np
 import rioxarray  # noqa: F401  — registers .rio accessor on xarray DataArray
 
-from src.modules.elevation.domain.exceptions import DemNotAvailable, ElevationDataNotFound
+from src.modules.elevation.domain.exceptions import ElevationDataNotFound
 from src.modules.elevation.domain.value_objects import Elevation, GeoPoint
 from src.shared.domain import GeoPolygon
+from src.shared.domain.exceptions import DemNotAvailable
 from src.shared.infrastructure.dem.stac_dem_loader import clip_dem, fetch_dem_tiles, merge_dem_tiles
 
 

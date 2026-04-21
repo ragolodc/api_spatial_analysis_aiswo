@@ -4,9 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from src.modules.elevation_analysis.domain.exceptions import (
-    DemNotAvailable,
     ElevationAnalysisException,
-    ElevationSourceNotConfigured,
     ZoneNotFound,
 )
 from src.modules.elevation_analysis.infrastructure.factories import (
@@ -24,6 +22,7 @@ from src.modules.elevation_analysis.presentation.schemas import (
     RunAnalysisRequest,
 )
 from src.shared.db.session import get_db
+from src.shared.domain.exceptions import DemNotAvailable, ElevationSourceNotConfigured
 
 router = APIRouter()
 

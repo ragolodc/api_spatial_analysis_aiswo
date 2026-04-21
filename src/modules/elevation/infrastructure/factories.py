@@ -7,7 +7,6 @@ from src.modules.elevation.application.queries import (
     GetPointElevation,
     ListElevationSources,
 )
-from src.modules.elevation.domain.exceptions import ElevationSourceNotConfigured
 from src.modules.elevation.infrastructure.persistence import (
     SQLAlchemyElevationSourceRepository,
 )
@@ -15,6 +14,7 @@ from src.modules.elevation.infrastructure.providers.planetary_computer import (
     PlanetaryComputerElevationProvider,
 )
 from src.modules.zones.infrastructure.zone_geometry_adapter import SQLAlchemyZoneGeometryAdapter
+from src.shared.domain.exceptions import ElevationSourceNotConfigured
 
 
 def get_elevation_provider(db: Session) -> PlanetaryComputerElevationProvider:

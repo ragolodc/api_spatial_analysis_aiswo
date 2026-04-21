@@ -6,8 +6,8 @@ from contourpy import contour_generator
 from shapely.geometry import MultiLineString, mapping, shape
 
 from src.modules.elevation_analysis.domain.entities import PointType
-from src.modules.elevation_analysis.domain.exceptions import DemNotAvailable
 from src.shared.domain import GeoPolygon
+from src.shared.domain.exceptions import DemNotAvailable
 from src.shared.infrastructure.dem.stac_dem_loader import clip_dem, fetch_dem_tiles, merge_dem_tiles
 
 _PROVIDER_NAME = "planetary_computer"

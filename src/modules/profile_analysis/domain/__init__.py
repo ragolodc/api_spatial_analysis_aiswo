@@ -14,7 +14,6 @@ from src.modules.profile_analysis.domain.entities import (
     TransverseProfile,
 )
 from src.modules.profile_analysis.domain.exceptions import (
-    DemNotAvailable,
     ProfileAnalysisException,
 )
 from src.modules.profile_analysis.domain.ports import (
@@ -26,7 +25,6 @@ from src.modules.profile_analysis.domain.ports import (
 
 __all__ = [
     "ProfileAnalysisException",
-    "DemNotAvailable",
     "PivotKind",
     "ProfileType",
     "ProfileAnalysisAnalytics",

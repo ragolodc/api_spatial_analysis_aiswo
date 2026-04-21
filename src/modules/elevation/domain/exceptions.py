@@ -11,15 +11,3 @@ class ElevationDataNotFound(ElevationException):
     """Raised when no DEM coverage is found for the requested geometry."""
 
     pass
-
-
-class DemNotAvailable(ElevationException):
-    """Raised when no DEM coverage is available for the requested profile points."""
-
-    pass
-
-
-class ElevationSourceNotConfigured(ElevationException):
-    """Raised when no active elevation source is available."""
-
-    pass

@@ -11,15 +11,3 @@ class ZoneNotFound(ElevationAnalysisException):
     """Raised when a zone is not found in repository."""
 
     pass
-
-
-class DemNotAvailable(ElevationAnalysisException):
-    """Raised when DEM data is not available for given geometry."""
-
-    pass
-
-
-class ElevationSourceNotConfigured(ElevationAnalysisException):
-    """Raised when no active elevation source is available."""
-
-    pass

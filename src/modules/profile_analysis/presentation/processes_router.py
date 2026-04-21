@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from src.modules.profile_analysis.domain.entities import ProfileAnalysisJob, ProfileType
-from src.modules.profile_analysis.domain.exceptions import ElevationSourceNotConfigured
 from src.modules.profile_analysis.infrastructure.factories import (
     get_get_profile_analysis_analytics,
     get_get_profile_analysis_job,
@@ -24,6 +23,7 @@ from src.modules.profile_analysis.presentation.schemas import (
 )
 from src.shared.config import settings
 from src.shared.db.session import get_db
+from src.shared.domain.exceptions import ElevationSourceNotConfigured
 
 _POINTS_MIN_LIMIT = 1
 _POINTS_MAX_LIMIT = 10_000

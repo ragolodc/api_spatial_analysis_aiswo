@@ -9,8 +9,9 @@ from src.modules.elevation_analysis.domain.entities import (
     ElevationPoint,
     PointType,
 )
-from src.modules.elevation_analysis.domain.exceptions import DemNotAvailable, ZoneNotFound
+from src.modules.elevation_analysis.domain.exceptions import ZoneNotFound
 from src.shared.domain import GeoMultiLineString
+from src.shared.domain.exceptions import DemNotAvailable
 
 _API_V1_PREFIX = "/api/v1"
 

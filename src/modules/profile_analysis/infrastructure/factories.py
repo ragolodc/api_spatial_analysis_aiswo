@@ -16,7 +16,6 @@ from src.modules.profile_analysis.application.commands import (
     RunProfileAnalysis,
 )
 from src.modules.profile_analysis.application.services import SampleProfileElevations
-from src.modules.profile_analysis.domain.exceptions import ElevationSourceNotConfigured
 from src.modules.profile_analysis.infrastructure.dispatchers import (
     CeleryProfileAnalysisDispatcher,
 )
@@ -30,6 +29,7 @@ from src.modules.profile_analysis.infrastructure.warehouses import (
     ClickHouseProfilePointWarehouse,
 )
 from src.shared.config import settings
+from src.shared.domain.exceptions import ElevationSourceNotConfigured
 
 
 def get_profile_analysis_job_repository(db: Session) -> SQLAlchemyProfileAnalysisJobRepository:

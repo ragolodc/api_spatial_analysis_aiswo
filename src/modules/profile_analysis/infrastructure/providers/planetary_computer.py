@@ -5,7 +5,7 @@ import rioxarray  # noqa: F401 — registers the rioxarray accessor on xarray
 from shapely.geometry import Polygon
 
 from src.modules.profile_analysis.domain.entities import ProfileSamplePoint
-from src.modules.profile_analysis.domain.exceptions import DemNotAvailable
+from src.shared.domain.exceptions import DemNotAvailable
 from src.shared.infrastructure.dem.stac_dem_loader import fetch_dem_tiles, merge_dem_tiles
 
 _PROVIDER_NAME = "planetary_computer"

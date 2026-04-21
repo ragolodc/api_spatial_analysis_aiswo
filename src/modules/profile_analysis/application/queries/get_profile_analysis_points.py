@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from src.modules.profile_analysis.domain.entities import ProfilePointRow
+from src.modules.profile_analysis.domain.entities import ProfilePointRow, ProfileType
 from src.modules.profile_analysis.domain.ports import ProfileAnalysisPointWarehouse
 
 
@@ -13,7 +13,7 @@ class GetProfileAnalysisPoints:
     def execute(
         self,
         request_id: UUID,
-        profile_type: str | None,
+        profile_type: ProfileType | None,
         limit: int,
         offset: int,
     ) -> list[ProfilePointRow]:

@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.modules.profile_analysis.domain.entities import ProfileAnalysisJob, ProfileType
 from src.modules.profile_analysis.infrastructure.factories import (
@@ -123,17 +123,9 @@ def get_profile_analysis_points(
     request_id: UUID,
     use_case=Depends(get_get_profile_analysis_points),
     profile_type: ProfileType | None = None,
-    limit: int = 1000,
-    offset: int = 0,
+    limit: int = Query(default=1000, ge=_POINTS_MIN_LIMIT, le=_POINTS_MAX_LIMIT),
+    offset: int = Query(default=0, ge=0),
 ) -> ProfilePointsResponse:
-    if limit < _POINTS_MIN_LIMIT or limit > _POINTS_MAX_LIMIT:
-        raise HTTPException(
-            status_code=400,
-            detail=f"limit must be between {_POINTS_MIN_LIMIT} and {_POINTS_MAX_LIMIT}",
-        )
-    if offset < 0:
-        raise HTTPException(status_code=400, detail="offset must be >= 0")
-
     rows = use_case.execute(
         request_id=request_id,
         profile_type=profile_type,

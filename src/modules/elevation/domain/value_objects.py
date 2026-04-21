@@ -1,14 +1,8 @@
 from dataclasses import dataclass
-from typing import Any
 
+from src.shared.domain.value_objects import GeoPoint  # re-exported from shared kernel
 
-@dataclass
-class GeoPoint:
-    longitude: float
-    latitude: float
-
-    def to_geojson(self) -> dict[str, Any]:
-        return {"type": "Point", "coordinates": [self.longitude, self.latitude]}
+__all__ = ["GeoPoint", "Elevation"]
 
 
 @dataclass(frozen=True)

@@ -50,7 +50,7 @@ class PlanetaryComputerElevationProvider:
 
         tiles = fetch_dem_tiles(self._catalog_url, self._collection, point.to_geojson())
         if not tiles:
-            raise DemNotAvailable("No DEM coverage found for the requested profile points")
+            raise ElevationDataNotFound("No DEM coverage found for the requested point")
 
         da = tiles[0]
         try:

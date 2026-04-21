@@ -5,6 +5,17 @@ from typing import Any
 
 
 @dataclass
+class GeoPoint:
+    """Geographic point expressed as longitude/latitude."""
+
+    longitude: float
+    latitude: float
+
+    def to_geojson(self) -> dict[str, Any]:
+        return {"type": "Point", "coordinates": [self.longitude, self.latitude]}
+
+
+@dataclass
 class GeoPolygon:
     """Geographic polygon expressed as GeoJSON-style nested coordinate list."""
 

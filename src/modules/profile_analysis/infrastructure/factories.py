@@ -1,5 +1,6 @@
 """Dependency injection factories for profile analysis module."""
 
+import clickhouse_connect
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
@@ -28,6 +29,9 @@ from src.modules.profile_analysis.infrastructure.providers import (
 from src.modules.profile_analysis.infrastructure.warehouses import (
     ClickHouseProfilePointWarehouse,
 )
+from src.modules.profile_analysis.infrastructure.warehouses.clickhouse_schema import (
+    clickhouse_connect,
+)
 from src.shared.config import settings
 from src.shared.db.session import get_db
 from src.shared.domain import ElevationSourceNotConfigured, ElevationSourceReader
@@ -38,11 +42,15 @@ def get_profile_analysis_job_repository(db: Session) -> SQLAlchemyProfileAnalysi
 
 
 def get_profile_analysis_point_warehouse() -> ClickHouseProfilePointWarehouse:
-    return ClickHouseProfilePointWarehouse(
+    client = clickhouse_connect.get_client(
         host=settings.clickhouse_host,
         port=settings.clickhouse_port,
         username=settings.clickhouse_user,
         password=settings.clickhouse_password,
+    )
+
+    return ClickHouseProfilePointWarehouse(
+        client=client,
         database=settings.clickhouse_database,
     )
 

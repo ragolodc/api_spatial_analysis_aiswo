@@ -6,6 +6,7 @@ from src.modules.profile_analysis.domain.entities import (
     ProfileAnalysisJob,
     ProfileAnalysisJobStatus,
 )
+from src.modules.profile_analysis.domain.exceptions import ProfileAnalysisJobNotFound
 from src.modules.profile_analysis.domain.ports import ProfileAnalysisJobRepository
 
 _MAX_ERROR_MESSAGE_LEN = 1000
@@ -36,7 +37,9 @@ class PersistProfileAnalysisJob:
             set_started_at=True,
         )
 
-    def mark_completed(self, request_id: UUID, result_payload: dict[str, Any]) -> ProfileAnalysisJob:
+    def mark_completed(
+        self, request_id: UUID, result_payload: dict[str, Any]
+    ) -> ProfileAnalysisJob:
         return self._transition(
             request_id,
             ProfileAnalysisJobStatus.COMPLETED,
@@ -81,5 +84,5 @@ class PersistProfileAnalysisJob:
     def _require_job(self, request_id: UUID) -> ProfileAnalysisJob:
         job = self._repository.find_by_id(request_id)
         if job is None:
-            raise ValueError(f"ProfileAnalysisJob {request_id} not found")
+            raise ProfileAnalysisJobNotFound(f"ProfileAnalysisJob {request_id} not found")
         return job

@@ -1,7 +1,7 @@
 import re
 from uuid import UUID
 
-import clickhouse_connect
+import clickhouse_connect.driver
 
 from src.modules.profile_analysis.domain.entities import (
     ProfileAnalysisAnalytics,
@@ -18,24 +18,11 @@ _SAFE_IDENTIFIER = re.compile(r"^[a-zA-Z0-9_]+$")
 class ClickHouseProfilePointWarehouse:
     """ClickHouse adapter for flattened profile-analysis point storage and analytics."""
 
-    def __init__(
-        self,
-        host: str,
-        port: int,
-        username: str,
-        password: str,
-        database: str,
-    ) -> None:
+    def __init__(self, client: clickhouse_connect.driver.Client, database: str) -> None:
         if not _SAFE_IDENTIFIER.match(database):
             raise ValueError(f"Invalid database name: {database!r}")
         self._database = database
-        self._client = clickhouse_connect.get_client(
-            host=host,
-            port=port,
-            username=username,
-            password=password,
-        )
-        self._ensure_schema()
+        self._client = client
 
     def __enter__(self) -> "ClickHouseProfilePointWarehouse":
         return self
@@ -200,26 +187,3 @@ class ClickHouseProfilePointWarehouse:
             )
             for r in rows
         ]
-
-    def _ensure_schema(self) -> None:
-        self._client.command(f"CREATE DATABASE IF NOT EXISTS {self._database}")
-        self._client.command(
-            f"""
-            CREATE TABLE IF NOT EXISTS {self._database}.profile_analysis_points (
-                request_id UUID,
-                zone_id UUID,
-                profile_type LowCardinality(String),
-                profile_key String,
-                point_index UInt32,
-                radius_m Float64,
-                angle_deg Float64,
-                distance_m Float64,
-                longitude Float64,
-                latitude Float64,
-                elevation_m Nullable(Float64),
-                source_id UUID
-            )
-            ENGINE = MergeTree
-            ORDER BY (request_id, profile_type, profile_key, point_index)
-            """
-        )

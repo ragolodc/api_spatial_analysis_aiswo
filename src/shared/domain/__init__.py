@@ -3,9 +3,10 @@
 from src.shared.domain.entities import ElevationSource
 from src.shared.domain.exceptions import DemNotAvailable, ElevationSourceNotConfigured
 from src.shared.domain.ports import ElevationSourceReader, ZoneGeometryReader
-from src.shared.domain.value_objects import GeoMultiLineString, GeoPolygon
+from src.shared.domain.value_objects import GeoMultiLineString, GeoPoint, GeoPolygon
 
 __all__ = [
+    "GeoPoint",
     "GeoPolygon",
     "GeoMultiLineString",
     "ElevationSourceNotConfigured",

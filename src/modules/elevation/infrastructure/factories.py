@@ -1,5 +1,6 @@
 """Dependency injection factories for elevation module."""
 
+from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from src.modules.elevation.application.queries import (
@@ -14,7 +15,8 @@ from src.modules.elevation.infrastructure.providers.planetary_computer import (
     PlanetaryComputerElevationProvider,
 )
 from src.modules.zones.infrastructure.zone_geometry_adapter import SQLAlchemyZoneGeometryAdapter
-from src.shared.domain.exceptions import ElevationSourceNotConfigured
+from src.shared.db.session import get_db
+from src.shared.domain import ElevationSourceNotConfigured
 
 
 def get_elevation_provider(db: Session) -> PlanetaryComputerElevationProvider:
@@ -52,3 +54,10 @@ def get_list_elevation_sources(db: Session) -> ListElevationSources:
 def get_zone_geometry_reader(db: Session) -> SQLAlchemyZoneGeometryAdapter:
     """Factory for ZoneGeometryReader ACL adapter."""
     return SQLAlchemyZoneGeometryAdapter(db)
+
+
+def get_elevation_source_reader(
+    db: Session = Depends(get_db),
+) -> SQLAlchemyElevationSourceRepository:
+    """Factory for ElevationSourceReader port — provides the active source resolver."""
+    return SQLAlchemyElevationSourceRepository(db)

@@ -59,7 +59,7 @@ def test_run_zone_elevation_analysis_returns_feature(client, monkeypatch) -> Non
     monkeypatch.setattr(
         analysis_processes_router,
         "get_run_zone_elevation_analysis",
-        lambda db: _RunAnalysis(),
+        lambda db, source_reader: _RunAnalysis(),
     )
 
     response = client.post(
@@ -81,7 +81,7 @@ def test_run_zone_elevation_analysis_maps_zone_not_found(client, monkeypatch) ->
     monkeypatch.setattr(
         analysis_processes_router,
         "get_run_zone_elevation_analysis",
-        lambda db: _RunAnalysis(),
+        lambda db, source_reader: _RunAnalysis(),
     )
 
     response = client.post(
@@ -102,7 +102,7 @@ def test_generate_zone_contours_maps_dem_not_available(client, monkeypatch) -> N
     monkeypatch.setattr(
         analysis_processes_router,
         "get_generate_zone_contours",
-        lambda db: _GenerateContours(),
+        lambda db, source_reader: _GenerateContours(),
     )
 
     response = client.post(

@@ -2,7 +2,6 @@
 
 from sqlalchemy.orm import Session
 
-from src.modules.elevation.infrastructure.persistence import SQLAlchemyElevationSourceRepository
 from src.modules.profile_analysis.application import (
     GetProfileAnalysisAnalytics,
     GetProfileAnalysisJob,
@@ -29,7 +28,7 @@ from src.modules.profile_analysis.infrastructure.warehouses import (
     ClickHouseProfilePointWarehouse,
 )
 from src.shared.config import settings
-from src.shared.domain.exceptions import ElevationSourceNotConfigured
+from src.shared.domain import ElevationSourceNotConfigured, ElevationSourceReader
 
 
 def get_profile_analysis_job_repository(db: Session) -> SQLAlchemyProfileAnalysisJobRepository:
@@ -54,9 +53,10 @@ def get_persist_profile_analysis_points() -> PersistProfileAnalysisPoints:
     return PersistProfileAnalysisPoints(warehouse=get_profile_analysis_point_warehouse())
 
 
-def get_profile_elevation_provider(db: Session) -> PlanetaryComputerProfileElevationProvider:
-    repo = SQLAlchemyElevationSourceRepository(db)
-    source = repo.find_active()
+def get_profile_elevation_provider(
+    source_reader: ElevationSourceReader,
+) -> PlanetaryComputerProfileElevationProvider:
+    source = source_reader.find_active()
     if source is None:
         raise ElevationSourceNotConfigured("No active elevation source configured")
     if not source.source_url or not source.collection:
@@ -70,9 +70,11 @@ def get_profile_elevation_provider(db: Session) -> PlanetaryComputerProfileEleva
     )
 
 
-def get_run_profile_analysis(db: Session) -> RunProfileAnalysis:
+def get_run_profile_analysis(
+    db: Session, source_reader: ElevationSourceReader
+) -> RunProfileAnalysis:
     return RunProfileAnalysis(
-        elevation_sampler=SampleProfileElevations(get_profile_elevation_provider(db))
+        elevation_sampler=SampleProfileElevations(get_profile_elevation_provider(source_reader))
     )
 
 

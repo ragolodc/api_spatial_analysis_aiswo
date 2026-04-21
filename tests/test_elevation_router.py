@@ -3,9 +3,9 @@ from uuid import uuid4
 
 import src.modules.elevation.presentation.processes_router as elevation_processes_router
 import src.modules.elevation.presentation.sources_router as elevation_sources_router
-from src.modules.elevation.domain.entities import ElevationSource
 from src.modules.elevation.domain.exceptions import ElevationDataNotFound
 from src.modules.elevation.domain.value_objects import Elevation, GeoPoint
+from src.shared.domain import ElevationSource
 
 _API_V1_PREFIX = "/api/v1"
 

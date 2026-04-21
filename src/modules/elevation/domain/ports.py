@@ -1,8 +1,7 @@
 from typing import Protocol
 
-from src.modules.elevation.domain.entities import ElevationSource
 from src.modules.elevation.domain.value_objects import Elevation, GeoPoint
-from src.shared.domain import GeoPolygon
+from src.shared.domain import ElevationSource, GeoPolygon
 
 
 class ElevationProvider(Protocol):

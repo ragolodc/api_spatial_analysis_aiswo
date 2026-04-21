@@ -1,7 +1,7 @@
 """Query: List configured elevation sources."""
 
-from src.modules.elevation.domain.entities import ElevationSource
 from src.modules.elevation.domain.ports import ElevationSourceRepository
+from src.shared.domain.entities import ElevationSource
 
 
 class ListElevationSources:
@@ -12,4 +12,3 @@ class ListElevationSources:
 
     def execute(self) -> list[ElevationSource]:
         return self._repo.find_all()
-

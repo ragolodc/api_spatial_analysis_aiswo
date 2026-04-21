@@ -5,6 +5,7 @@ from typing import Any
 from uuid import UUID
 
 import src.shared.db.registry  # noqa: F401 — ensures all ORM models are registered before SQLAlchemy resolves FKs
+from src.modules.elevation.infrastructure.factories import get_elevation_source_reader
 from src.modules.profile_analysis.application.commands import (
     PersistProfileAnalysisJob,
     PersistProfileAnalysisPoints,
@@ -48,7 +49,9 @@ def generate_zone_profiles(
                 zone_id=UUID(zone_id),
                 payload=payload,
             )
-            result = get_run_profile_analysis(db).execute(job_request)
+            result = get_run_profile_analysis(db, get_elevation_source_reader(db)).execute(
+                job_request
+            )
 
             warehouse = get_profile_analysis_point_warehouse()
             with warehouse:

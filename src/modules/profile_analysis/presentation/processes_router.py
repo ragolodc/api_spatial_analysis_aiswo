@@ -23,7 +23,7 @@ from src.modules.profile_analysis.presentation.schemas import (
 )
 from src.shared.config import settings
 from src.shared.db.session import get_db
-from src.shared.domain.exceptions import ElevationSourceNotConfigured
+from src.shared.domain import ElevationSourceNotConfigured
 
 _POINTS_MIN_LIMIT = 1
 _POINTS_MAX_LIMIT = 10_000

@@ -2,7 +2,6 @@
 
 from sqlalchemy.orm import Session
 
-from src.modules.elevation.infrastructure.persistence import SQLAlchemyElevationSourceRepository
 from src.modules.elevation_analysis.application.commands import (
     GenerateZoneContours,
     RunZoneElevationAnalysis,
@@ -19,13 +18,13 @@ from src.modules.elevation_analysis.infrastructure.providers import (
     PlanetaryComputerAnalysisProvider,
 )
 from src.modules.zones.infrastructure.zone_geometry_adapter import SQLAlchemyZoneGeometryAdapter
-from src.shared.domain.exceptions import ElevationSourceNotConfigured
+from src.shared.domain import ElevationSourceNotConfigured, ElevationSourceReader
 
 
-def get_dem_provider(db: Session) -> PlanetaryComputerAnalysisProvider:
+def get_dem_provider(source_reader: ElevationSourceReader) -> PlanetaryComputerAnalysisProvider:
     """Resolve the active elevation source from DB and build the DEM provider."""
-    repo = SQLAlchemyElevationSourceRepository(db)
-    source = repo.find_active()
+
+    source = source_reader.find_active()
     if source is None:
         raise ElevationSourceNotConfigured("No active elevation source configured")
     if not source.source_url or not source.collection:
@@ -49,19 +48,23 @@ def get_contour_repository(db: Session) -> SQLAlchemyElevationContourRepository:
     return SQLAlchemyElevationContourRepository(db)
 
 
-def get_run_zone_elevation_analysis(db: Session) -> RunZoneElevationAnalysis:
+def get_run_zone_elevation_analysis(
+    db: Session, source_reader: ElevationSourceReader
+) -> RunZoneElevationAnalysis:
     """Factory for RunZoneElevationAnalysis command."""
     return RunZoneElevationAnalysis(
-        provider=get_dem_provider(db),
+        provider=get_dem_provider(source_reader),
         analysis_repo=get_analysis_repository(db),
         zone_reader=SQLAlchemyZoneGeometryAdapter(db),
     )
 
 
-def get_generate_zone_contours(db: Session) -> GenerateZoneContours:
+def get_generate_zone_contours(
+    db: Session, source_reader: ElevationSourceReader
+) -> GenerateZoneContours:
     """Factory for GenerateZoneContours command."""
     return GenerateZoneContours(
-        provider=get_dem_provider(db),
+        provider=get_dem_provider(source_reader),
         contour_repo=get_contour_repository(db),
         zone_reader=SQLAlchemyZoneGeometryAdapter(db),
     )

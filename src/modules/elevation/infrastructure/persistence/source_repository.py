@@ -2,9 +2,9 @@
 
 from sqlalchemy.orm import Session
 
-from src.modules.elevation.domain.entities import ElevationSource
 from src.modules.elevation.domain.ports import ElevationSourceRepository
 from src.modules.elevation.infrastructure.persistence.models import ElevationSourceModel
+from src.shared.domain import ElevationSource
 
 
 class SQLAlchemyElevationSourceRepository(ElevationSourceRepository):

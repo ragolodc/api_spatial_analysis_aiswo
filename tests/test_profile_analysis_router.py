@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
-import src.modules.profile_analysis.presentation.processes_router as profile_router
+from src.main import app
 from src.modules.profile_analysis.domain.entities import (
     ProfileAnalysisAnalytics,
     ProfileAnalysisJob,
@@ -10,20 +10,25 @@ from src.modules.profile_analysis.domain.entities import (
     ProfileSummaryEntry,
     ProfileType,
 )
+from src.modules.profile_analysis.infrastructure.factories import (
+    get_get_profile_analysis_analytics,
+    get_get_profile_analysis_job,
+    get_get_profile_analysis_points,
+    get_get_profile_analysis_summary,
+    get_queue_profile_analysis,
+)
 
 _API_V1_PREFIX = "/api/v1"
 
 
-def test_queue_profile_analysis_returns_accepted(client, monkeypatch) -> None:
+def test_queue_profile_analysis_returns_accepted(client) -> None:
     request_id = uuid4()
 
     class _QueueProfileAnalysis:
         def execute(self, zone_id, payload):
             return request_id
 
-    monkeypatch.setattr(
-        profile_router, "get_queue_profile_analysis", lambda db: _QueueProfileAnalysis()
-    )
+    app.dependency_overrides[get_queue_profile_analysis] = lambda: _QueueProfileAnalysis()
 
     response = client.post(
         f"{_API_V1_PREFIX}/processes/profile-analysis/execution",
@@ -45,7 +50,7 @@ def test_queue_profile_analysis_returns_accepted(client, monkeypatch) -> None:
     assert response.json()["status"] == "queued"
 
 
-def test_get_profile_analysis_job_returns_persisted_status(client, monkeypatch) -> None:
+def test_get_profile_analysis_job_returns_persisted_status(client) -> None:
     request_id = uuid4()
     zone_id = uuid4()
 
@@ -64,9 +69,7 @@ def test_get_profile_analysis_job_returns_persisted_status(client, monkeypatch) 
                 completed_at=datetime.now(timezone.utc),
             )
 
-    monkeypatch.setattr(
-        profile_router, "get_get_profile_analysis_job", lambda db: _GetProfileAnalysisJob()
-    )
+    app.dependency_overrides[get_get_profile_analysis_job] = lambda: _GetProfileAnalysisJob()
 
     response = client.get(f"{_API_V1_PREFIX}/processes/profile-analysis/jobs/{request_id}")
 
@@ -75,7 +78,7 @@ def test_get_profile_analysis_job_returns_persisted_status(client, monkeypatch) 
     assert response.json()["result_payload"] == {"total_points": 42}
 
 
-def test_get_profile_analysis_analytics_returns_aggregated_result(client, monkeypatch) -> None:
+def test_get_profile_analysis_analytics_returns_aggregated_result(client) -> None:
     request_id = uuid4()
 
     class _GetProfileAnalysisAnalytics:
@@ -89,10 +92,8 @@ def test_get_profile_analysis_analytics_returns_aggregated_result(client, monkey
                 avg_elevation_m=118.5,
             )
 
-    monkeypatch.setattr(
-        profile_router,
-        "get_get_profile_analysis_analytics",
-        lambda: _GetProfileAnalysisAnalytics(),
+    app.dependency_overrides[get_get_profile_analysis_analytics] = lambda: (
+        _GetProfileAnalysisAnalytics()
     )
 
     response = client.get(
@@ -104,7 +105,7 @@ def test_get_profile_analysis_analytics_returns_aggregated_result(client, monkey
     assert response.json()["avg_elevation_m"] == 118.5
 
 
-def test_get_profile_analysis_points_returns_paginated_rows(client, monkeypatch) -> None:
+def test_get_profile_analysis_points_returns_paginated_rows(client) -> None:
     request_id = uuid4()
 
     class _GetProfileAnalysisPoints:
@@ -123,11 +124,7 @@ def test_get_profile_analysis_points_returns_paginated_rows(client, monkeypatch)
                 )
             ]
 
-    monkeypatch.setattr(
-        profile_router,
-        "get_get_profile_analysis_points",
-        lambda: _GetProfileAnalysisPoints(),
-    )
+    app.dependency_overrides[get_get_profile_analysis_points] = lambda: _GetProfileAnalysisPoints()
 
     response = client.get(
         f"{_API_V1_PREFIX}/processes/profile-analysis/jobs/{request_id}/points?limit=10&offset=0"
@@ -142,7 +139,13 @@ def test_get_profile_analysis_points_returns_paginated_rows(client, monkeypatch)
     assert data["items"][0]["elevation_m"] == 120.5
 
 
-def test_get_profile_analysis_points_rejects_invalid_profile_type(client, monkeypatch) -> None:
+def test_get_profile_analysis_points_rejects_invalid_profile_type(client) -> None:
+    class _Stub:
+        def execute(self, *args, **kwargs):
+            raise AssertionError("Should not be called")
+
+    app.dependency_overrides[get_get_profile_analysis_points] = lambda: _Stub()
+
     request_id = uuid4()
     response = client.get(
         f"{_API_V1_PREFIX}/processes/profile-analysis/jobs/{request_id}/points?profile_type=invalid"
@@ -150,7 +153,7 @@ def test_get_profile_analysis_points_rejects_invalid_profile_type(client, monkey
     assert response.status_code == 422
 
 
-def test_get_profile_analysis_summary_returns_per_profile_stats(client, monkeypatch) -> None:
+def test_get_profile_analysis_summary_returns_per_profile_stats(client) -> None:
     request_id = uuid4()
 
     class _GetProfileAnalysisSummary:
@@ -174,10 +177,8 @@ def test_get_profile_analysis_summary_returns_per_profile_stats(client, monkeypa
                 ),
             ]
 
-    monkeypatch.setattr(
-        profile_router,
-        "get_get_profile_analysis_summary",
-        lambda: _GetProfileAnalysisSummary(),
+    app.dependency_overrides[get_get_profile_analysis_summary] = lambda: (
+        _GetProfileAnalysisSummary()
     )
 
     response = client.get(f"{_API_V1_PREFIX}/processes/profile-analysis/jobs/{request_id}/summary")

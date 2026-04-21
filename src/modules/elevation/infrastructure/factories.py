@@ -36,22 +36,22 @@ def get_elevation_provider(db: Session) -> PlanetaryComputerElevationProvider:
     )
 
 
-def get_get_highest_point(db: Session) -> GetHighestPointInPolygon:
+def get_get_highest_point(db: Session = Depends(get_db)) -> GetHighestPointInPolygon:
     """Factory for GetHighestPointInPolygon query."""
     return GetHighestPointInPolygon(get_elevation_provider(db))
 
 
-def get_get_point_elevation(db: Session) -> GetPointElevation:
+def get_get_point_elevation(db: Session = Depends(get_db)) -> GetPointElevation:
     """Factory for GetPointElevation query."""
     return GetPointElevation(get_elevation_provider(db))
 
 
-def get_list_elevation_sources(db: Session) -> ListElevationSources:
+def get_list_elevation_sources(db: Session = Depends(get_db)) -> ListElevationSources:
     """Factory for ListElevationSources query."""
     return ListElevationSources(SQLAlchemyElevationSourceRepository(db))
 
 
-def get_zone_geometry_reader(db: Session) -> SQLAlchemyZoneGeometryAdapter:
+def get_zone_geometry_reader(db: Session = Depends(get_db)) -> SQLAlchemyZoneGeometryAdapter:
     """Factory for ZoneGeometryReader ACL adapter."""
     return SQLAlchemyZoneGeometryAdapter(db)
 

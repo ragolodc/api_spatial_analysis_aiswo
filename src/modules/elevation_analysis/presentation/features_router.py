@@ -3,7 +3,6 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from src.modules.elevation_analysis.infrastructure.factories import (
     get_get_zone_contours,
@@ -17,7 +16,6 @@ from src.modules.elevation_analysis.presentation.schemas import (
     ElevationAnalysisCollection,
     ElevationContourCollection,
 )
-from src.shared.db.session import get_db
 
 router = APIRouter()
 
@@ -30,9 +28,9 @@ router = APIRouter()
 )
 def list_zone_analyses(
     zone_id: UUID,
-    db: Session = Depends(get_db),
+    use_case=Depends(get_list_zone_analyses),
 ) -> ElevationAnalysisCollection:
-    analyses = get_list_zone_analyses(db).execute(zone_id)
+    analyses = use_case.execute(zone_id)
     return ElevationAnalysisCollection(
         features=[analysis_to_feature(a) for a in analyses],
         number_matched=len(analyses),
@@ -47,7 +45,7 @@ def list_zone_analyses(
 )
 def get_zone_contours(
     zone_id: UUID,
-    db: Session = Depends(get_db),
+    use_case=Depends(get_get_zone_contours),
 ) -> ElevationContourCollection:
-    contours = get_get_zone_contours(db).execute(zone_id)
+    contours = use_case.execute(zone_id)
     return contours_to_collection(contours)

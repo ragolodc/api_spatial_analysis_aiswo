@@ -1,7 +1,6 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 
 from src.modules.zones.domain.entities import Zone
 from src.modules.zones.infrastructure.factories import get_create_zone, get_get_zone, get_list_zones
@@ -12,7 +11,6 @@ from src.modules.zones.presentation.schemas import (
     ZoneFeatureCollection,
     ZoneProperties,
 )
-from src.shared.db.session import get_db
 from src.shared.domain import GeoPolygon
 
 router = APIRouter(prefix="/collections/zones", tags=["OGC Features - Zones"])
@@ -32,15 +30,15 @@ def _to_feature(zone: Zone) -> ZoneFeature:
 
 
 @router.get("/items", response_model=ZoneFeatureCollection)
-def list_zones(db: Session = Depends(get_db)) -> ZoneFeatureCollection:
-    zones = get_list_zones(db).execute()
+def list_zones(use_case=Depends(get_list_zones)) -> ZoneFeatureCollection:
+    zones = use_case.execute()
     features = [_to_feature(z) for z in zones]
     return ZoneFeatureCollection(features=features, number_matched=len(features))
 
 
 @router.post("/items", response_model=ZoneFeature, status_code=201)
-def create_zone(body: CreateZoneRequest, db: Session = Depends(get_db)) -> ZoneFeature:
-    zone = get_create_zone(db).execute(
+def create_zone(body: CreateZoneRequest, use_case=Depends(get_create_zone)) -> ZoneFeature:
+    zone = use_case.execute(
         name=body.name,
         zone_type=body.zone_type,
         geometry=GeoPolygon(coordinates=body.geometry.coordinates),
@@ -49,8 +47,8 @@ def create_zone(body: CreateZoneRequest, db: Session = Depends(get_db)) -> ZoneF
 
 
 @router.get("/items/{zone_id}", response_model=ZoneFeature)
-def get_zone(zone_id: UUID, db: Session = Depends(get_db)) -> ZoneFeature:
-    zone = get_get_zone(db).execute(zone_id)
+def get_zone(zone_id: UUID, use_case=Depends(get_get_zone)) -> ZoneFeature:
+    zone = use_case.execute(zone_id)
     if not zone:
         raise HTTPException(status_code=404, detail="Zone not found")
     return _to_feature(zone)

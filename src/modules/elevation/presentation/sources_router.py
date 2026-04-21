@@ -1,21 +1,21 @@
 """Elevation sources metadata endpoint — not an OGC Feature collection (no geometry)."""
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 from src.modules.elevation.infrastructure.factories import get_list_elevation_sources
 from src.modules.elevation.presentation.schemas import (
     ElevationSourceCollection,
     ElevationSourceItem,
 )
-from src.shared.db.session import get_db
 
 router = APIRouter(prefix="/elevation-sources", tags=["Elevation Sources"])
 
 
 @router.get("", response_model=ElevationSourceCollection)
-def list_elevation_sources(db: Session = Depends(get_db)) -> ElevationSourceCollection:
-    sources = get_list_elevation_sources(db).execute()
+def list_elevation_sources(
+    use_case=Depends(get_list_elevation_sources),
+) -> ElevationSourceCollection:
+    sources = use_case.execute()
     return ElevationSourceCollection(
         items=[
             ElevationSourceItem(

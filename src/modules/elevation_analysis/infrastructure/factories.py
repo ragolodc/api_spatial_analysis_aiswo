@@ -1,7 +1,9 @@
 """Dependency injection factories for elevation analysis module."""
 
+from fastapi import Depends
 from sqlalchemy.orm import Session
 
+from src.modules.elevation.infrastructure.factories import get_elevation_source_reader
 from src.modules.elevation_analysis.application.commands import (
     GenerateZoneContours,
     RunZoneElevationAnalysis,
@@ -18,6 +20,7 @@ from src.modules.elevation_analysis.infrastructure.providers import (
     PlanetaryComputerAnalysisProvider,
 )
 from src.modules.zones.infrastructure.zone_geometry_adapter import SQLAlchemyZoneGeometryAdapter
+from src.shared.db.session import get_db
 from src.shared.domain import ElevationSourceNotConfigured, ElevationSourceReader
 
 
@@ -49,7 +52,8 @@ def get_contour_repository(db: Session) -> SQLAlchemyElevationContourRepository:
 
 
 def get_run_zone_elevation_analysis(
-    db: Session, source_reader: ElevationSourceReader
+    db: Session = Depends(get_db),
+    source_reader: ElevationSourceReader = Depends(get_elevation_source_reader),
 ) -> RunZoneElevationAnalysis:
     """Factory for RunZoneElevationAnalysis command."""
     return RunZoneElevationAnalysis(
@@ -60,7 +64,8 @@ def get_run_zone_elevation_analysis(
 
 
 def get_generate_zone_contours(
-    db: Session, source_reader: ElevationSourceReader
+    db: Session = Depends(get_db),
+    source_reader: ElevationSourceReader = Depends(get_elevation_source_reader),
 ) -> GenerateZoneContours:
     """Factory for GenerateZoneContours command."""
     return GenerateZoneContours(
@@ -70,13 +75,13 @@ def get_generate_zone_contours(
     )
 
 
-def get_list_zone_analyses(db: Session) -> ListZoneAnalyses:
+def get_list_zone_analyses(db: Session = Depends(get_db)) -> ListZoneAnalyses:
     """Factory for ListZoneAnalyses query."""
     analysis_repo = get_analysis_repository(db)
     return ListZoneAnalyses(analysis_repo)
 
 
-def get_get_zone_contours(db: Session) -> GetZoneContours:
+def get_get_zone_contours(db: Session = Depends(get_db)) -> GetZoneContours:
     """Factory for GetZoneContours query."""
     contour_repo = get_contour_repository(db)
     return GetZoneContours(contour_repo)

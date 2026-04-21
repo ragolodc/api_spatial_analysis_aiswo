@@ -1,5 +1,6 @@
 """Dependency injection factories for profile analysis module."""
 
+from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from src.modules.profile_analysis.application import (
@@ -28,6 +29,7 @@ from src.modules.profile_analysis.infrastructure.warehouses import (
     ClickHouseProfilePointWarehouse,
 )
 from src.shared.config import settings
+from src.shared.db.session import get_db
 from src.shared.domain import ElevationSourceNotConfigured, ElevationSourceReader
 
 
@@ -78,14 +80,14 @@ def get_run_profile_analysis(
     )
 
 
-def get_queue_profile_analysis(db: Session) -> QueueProfileAnalysis:
+def get_queue_profile_analysis(db: Session = Depends(get_db)) -> QueueProfileAnalysis:
     return QueueProfileAnalysis(
         dispatcher=CeleryProfileAnalysisDispatcher(),
         persist_job=get_persist_profile_analysis_job(db),
     )
 
 
-def get_get_profile_analysis_job(db: Session) -> GetProfileAnalysisJob:
+def get_get_profile_analysis_job(db: Session = Depends(get_db)) -> GetProfileAnalysisJob:
     return GetProfileAnalysisJob(repository=get_profile_analysis_job_repository(db))
 
 

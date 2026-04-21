@@ -1,9 +1,7 @@
 """OGC API Processes endpoints for elevation analysis."""
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 
-from src.modules.elevation.infrastructure.factories import get_elevation_source_reader
 from src.modules.elevation_analysis.domain.exceptions import (
     ElevationAnalysisException,
     ZoneNotFound,
@@ -22,8 +20,7 @@ from src.modules.elevation_analysis.presentation.schemas import (
     GenerateContoursRequest,
     RunAnalysisRequest,
 )
-from src.shared.db.session import get_db
-from src.shared.domain import DemNotAvailable, ElevationSourceNotConfigured, ElevationSourceReader
+from src.shared.domain import DemNotAvailable, ElevationSourceNotConfigured
 
 router = APIRouter()
 
@@ -36,13 +33,10 @@ router = APIRouter()
 )
 def run_zone_elevation_analysis(
     body: RunAnalysisRequest,
-    db: Session = Depends(get_db),
-    source_reader: ElevationSourceReader = Depends(get_elevation_source_reader),
+    use_case=Depends(get_run_zone_elevation_analysis),
 ) -> ElevationAnalysisFeature:
     try:
-        analysis = get_run_zone_elevation_analysis(db, source_reader).execute(
-            zone_id=body.inputs.zone_id
-        )
+        analysis = use_case.execute(zone_id=body.inputs.zone_id)
     except ElevationSourceNotConfigured as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except ZoneNotFound as exc:
@@ -63,11 +57,10 @@ def run_zone_elevation_analysis(
 )
 def generate_zone_contours(
     body: GenerateContoursRequest,
-    db: Session = Depends(get_db),
-    source_reader: ElevationSourceReader = Depends(get_elevation_source_reader),
+    use_case=Depends(get_generate_zone_contours),
 ) -> ElevationContourCollection:
     try:
-        contours = get_generate_zone_contours(db, source_reader).execute(
+        contours = use_case.execute(
             zone_id=body.inputs.zone_id,
             interval_m=body.inputs.interval_m,
         )

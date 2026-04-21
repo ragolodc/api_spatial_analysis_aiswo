@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 
 from src.modules.elevation.domain.exceptions import (
     ElevationDataNotFound,
@@ -16,7 +15,6 @@ from src.modules.elevation.presentation.schemas import (
     PointElevationRequest,
     PointGeometry,
 )
-from src.shared.db.session import get_db
 from src.shared.domain import GeoPolygon
 from src.shared.domain.exceptions import ElevationSourceNotConfigured
 
@@ -26,16 +24,17 @@ router = APIRouter(prefix="/processes", tags=["OGC Processes - Elevation Queries
 @router.post("/highest-point/execution", response_model=ElevationFeature)
 def execute_highest_point(
     body: HighestPointRequest,
-    db: Session = Depends(get_db),
+    use_case=Depends(get_get_highest_point),
+    zone_reader=Depends(get_zone_geometry_reader),
 ) -> ElevationFeature:
     try:
         if body.inputs.polygon:
             polygon = GeoPolygon(coordinates=body.inputs.polygon.coordinates)
         else:
-            polygon = get_zone_geometry_reader(db).find_polygon(body.inputs.zone_id)
+            polygon = zone_reader.find_polygon(body.inputs.zone_id)
             if not polygon:
                 raise HTTPException(status_code=404, detail="Zone not found")
-        point, elevation = get_get_highest_point(db).execute(polygon)
+        point, elevation = use_case.execute(polygon)
     except ElevationSourceNotConfigured as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except ElevationDataNotFound as exc:
@@ -50,14 +49,14 @@ def execute_highest_point(
 @router.post("/point-elevation/execution", response_model=ElevationFeature)
 def execute_point_elevation(
     body: PointElevationRequest,
-    db: Session = Depends(get_db),
+    use_case=Depends(get_get_point_elevation),
 ) -> ElevationFeature:
     try:
         point = GeoPoint(
             longitude=body.inputs.point.coordinates[0],
             latitude=body.inputs.point.coordinates[1],
         )
-        elevation = get_get_point_elevation(db).execute(point)
+        elevation = use_case.execute(point)
     except ElevationSourceNotConfigured as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except ElevationDataNotFound as exc:

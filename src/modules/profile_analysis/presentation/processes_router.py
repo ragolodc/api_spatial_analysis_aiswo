@@ -1,7 +1,6 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 
 from src.modules.profile_analysis.domain.entities import ProfileAnalysisJob, ProfileType
 from src.modules.profile_analysis.infrastructure.factories import (
@@ -22,7 +21,6 @@ from src.modules.profile_analysis.presentation.schemas import (
     QueueProfileAnalysisRequest,
 )
 from src.shared.config import settings
-from src.shared.db.session import get_db
 from src.shared.domain import ElevationSourceNotConfigured
 
 _POINTS_MIN_LIMIT = 1
@@ -53,7 +51,7 @@ def _to_job_response(job: ProfileAnalysisJob) -> ProfileAnalysisJobResponse:
 )
 def queue_profile_analysis(
     body: QueueProfileAnalysisRequest,
-    db: Session = Depends(get_db),
+    use_case=Depends(get_queue_profile_analysis),
 ) -> ProfileAnalysisJobAccepted:
     try:
         max_points = settings.profile_analysis_max_points
@@ -64,7 +62,7 @@ def queue_profile_analysis(
             )
 
         payload = body.model_dump(mode="json")
-        request_id = get_queue_profile_analysis(db).execute(
+        request_id = use_case.execute(
             zone_id=body.inputs.zone_id,
             payload=payload,
         )
@@ -85,9 +83,9 @@ def queue_profile_analysis(
 )
 def get_profile_analysis_job(
     request_id: UUID,
-    db: Session = Depends(get_db),
+    use_case=Depends(get_get_profile_analysis_job),
 ) -> ProfileAnalysisJobResponse:
-    job = get_get_profile_analysis_job(db).execute(request_id)
+    job = use_case.execute(request_id)
     if job is None:
         raise HTTPException(status_code=404, detail="Profile analysis job not found")
     return _to_job_response(job)
@@ -99,8 +97,11 @@ def get_profile_analysis_job(
     summary="Consultar agregados analiticos de un job de analisis de perfiles",
     tags=["OGC Processes - Profile Analysis"],
 )
-def get_profile_analysis_analytics(request_id: UUID) -> ProfileAnalysisAnalyticsResponse:
-    analytics = get_get_profile_analysis_analytics().execute(request_id)
+def get_profile_analysis_analytics(
+    request_id: UUID,
+    use_case=Depends(get_get_profile_analysis_analytics),
+) -> ProfileAnalysisAnalyticsResponse:
+    analytics = use_case.execute(request_id)
     if analytics is None:
         raise HTTPException(status_code=404, detail="Profile analysis analytics not found")
     return ProfileAnalysisAnalyticsResponse(
@@ -120,6 +121,7 @@ def get_profile_analysis_analytics(request_id: UUID) -> ProfileAnalysisAnalytics
 )
 def get_profile_analysis_points(
     request_id: UUID,
+    use_case=Depends(get_get_profile_analysis_points),
     profile_type: ProfileType | None = None,
     limit: int = 1000,
     offset: int = 0,
@@ -132,7 +134,7 @@ def get_profile_analysis_points(
     if offset < 0:
         raise HTTPException(status_code=400, detail="offset must be >= 0")
 
-    rows = get_get_profile_analysis_points().execute(
+    rows = use_case.execute(
         request_id=request_id,
         profile_type=profile_type,
         limit=limit,
@@ -166,8 +168,11 @@ def get_profile_analysis_points(
     summary="Resumen por perfil (min/max/avg elevation agrupado por perfil)",
     tags=["OGC Processes - Profile Analysis"],
 )
-def get_profile_analysis_summary(request_id: UUID) -> ProfileSummaryResponse:
-    entries = get_get_profile_analysis_summary().execute(request_id)
+def get_profile_analysis_summary(
+    request_id: UUID,
+    use_case=Depends(get_get_profile_analysis_summary),
+) -> ProfileSummaryResponse:
+    entries = use_case.execute(request_id)
     return ProfileSummaryResponse(
         request_id=request_id,
         profiles=[

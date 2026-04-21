@@ -1,8 +1,7 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
-import src.modules.elevation_analysis.presentation.features_router as analysis_features_router
-import src.modules.elevation_analysis.presentation.processes_router as analysis_processes_router
+from src.main import app
 from src.modules.elevation_analysis.domain.entities import (
     ElevationAnalysis,
     ElevationContour,
@@ -10,6 +9,12 @@ from src.modules.elevation_analysis.domain.entities import (
     PointType,
 )
 from src.modules.elevation_analysis.domain.exceptions import ZoneNotFound
+from src.modules.elevation_analysis.infrastructure.factories import (
+    get_generate_zone_contours,
+    get_get_zone_contours,
+    get_list_zone_analyses,
+    get_run_zone_elevation_analysis,
+)
 from src.shared.domain import GeoMultiLineString
 from src.shared.domain.exceptions import DemNotAvailable
 
@@ -48,7 +53,7 @@ def _sample_contour(zone_id) -> ElevationContour:
     )
 
 
-def test_run_zone_elevation_analysis_returns_feature(client, monkeypatch) -> None:
+def test_run_zone_elevation_analysis_returns_feature(client) -> None:
     analysis = _sample_analysis()
 
     class _RunAnalysis:
@@ -56,11 +61,7 @@ def test_run_zone_elevation_analysis_returns_feature(client, monkeypatch) -> Non
             assert zone_id == analysis.zone_id
             return analysis
 
-    monkeypatch.setattr(
-        analysis_processes_router,
-        "get_run_zone_elevation_analysis",
-        lambda db, source_reader: _RunAnalysis(),
-    )
+    app.dependency_overrides[get_run_zone_elevation_analysis] = lambda: _RunAnalysis()
 
     response = client.post(
         _API_V1_PREFIX + "/processes/analyze-zone-elevation/execution",
@@ -73,16 +74,12 @@ def test_run_zone_elevation_analysis_returns_feature(client, monkeypatch) -> Non
     assert len(payload["characteristic_points"]) == 1
 
 
-def test_run_zone_elevation_analysis_maps_zone_not_found(client, monkeypatch) -> None:
+def test_run_zone_elevation_analysis_maps_zone_not_found(client) -> None:
     class _RunAnalysis:
         def execute(self, zone_id):
             raise ZoneNotFound("Zone does not exist")
 
-    monkeypatch.setattr(
-        analysis_processes_router,
-        "get_run_zone_elevation_analysis",
-        lambda db, source_reader: _RunAnalysis(),
-    )
+    app.dependency_overrides[get_run_zone_elevation_analysis] = lambda: _RunAnalysis()
 
     response = client.post(
         _API_V1_PREFIX + "/processes/analyze-zone-elevation/execution",
@@ -94,16 +91,12 @@ def test_run_zone_elevation_analysis_maps_zone_not_found(client, monkeypatch) ->
     assert response.json()["message"] == "Zone does not exist"
 
 
-def test_generate_zone_contours_maps_dem_not_available(client, monkeypatch) -> None:
+def test_generate_zone_contours_maps_dem_not_available(client) -> None:
     class _GenerateContours:
         def execute(self, zone_id, interval_m):
             raise DemNotAvailable("DEM source unavailable")
 
-    monkeypatch.setattr(
-        analysis_processes_router,
-        "get_generate_zone_contours",
-        lambda db, source_reader: _GenerateContours(),
-    )
+    app.dependency_overrides[get_generate_zone_contours] = lambda: _GenerateContours()
 
     response = client.post(
         _API_V1_PREFIX + "/processes/generate-zone-contours/execution",
@@ -114,7 +107,7 @@ def test_generate_zone_contours_maps_dem_not_available(client, monkeypatch) -> N
     assert response.json()["message"] == "DEM source unavailable"
 
 
-def test_get_zone_contours_returns_feature_collection(client, monkeypatch) -> None:
+def test_get_zone_contours_returns_feature_collection(client) -> None:
     zone_id = uuid4()
     contour = _sample_contour(zone_id)
 
@@ -123,9 +116,7 @@ def test_get_zone_contours_returns_feature_collection(client, monkeypatch) -> No
             assert requested_zone_id == zone_id
             return [contour]
 
-    monkeypatch.setattr(
-        analysis_features_router, "get_get_zone_contours", lambda db: _GetContours()
-    )
+    app.dependency_overrides[get_get_zone_contours] = lambda: _GetContours()
 
     response = client.get(f"{_API_V1_PREFIX}/collections/zone-contours/items?zone_id={zone_id}")
 
@@ -135,7 +126,7 @@ def test_get_zone_contours_returns_feature_collection(client, monkeypatch) -> No
     assert payload["features"][0]["geometry"]["type"] == "MultiLineString"
 
 
-def test_list_zone_analyses_returns_feature_collection(client, monkeypatch) -> None:
+def test_list_zone_analyses_returns_feature_collection(client) -> None:
     analysis = _sample_analysis()
 
     class _ListAnalyses:
@@ -143,9 +134,7 @@ def test_list_zone_analyses_returns_feature_collection(client, monkeypatch) -> N
             assert zone_id == analysis.zone_id
             return [analysis]
 
-    monkeypatch.setattr(
-        analysis_features_router, "get_list_zone_analyses", lambda db: _ListAnalyses()
-    )
+    app.dependency_overrides[get_list_zone_analyses] = lambda: _ListAnalyses()
 
     response = client.get(
         f"{_API_V1_PREFIX}/collections/zone-analyses/items?zone_id={analysis.zone_id}"

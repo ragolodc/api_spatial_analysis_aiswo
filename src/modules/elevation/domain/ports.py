@@ -1,5 +1,4 @@
 from typing import Protocol
-from uuid import UUID
 
 from src.modules.elevation.domain.entities import ElevationSource
 from src.modules.elevation.domain.value_objects import Elevation, GeoPoint
@@ -14,9 +13,3 @@ class ElevationProvider(Protocol):
 class ElevationSourceRepository(Protocol):
     def find_all(self) -> list[ElevationSource]: ...
     def find_active(self) -> ElevationSource | None: ...
-
-
-class ZoneGeometryReader(Protocol):
-    """Narrow read port: get zone geometry without coupling to the zones module."""
-
-    def find_polygon(self, zone_id: UUID) -> GeoPolygon | None: ...

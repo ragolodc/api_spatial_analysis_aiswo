@@ -10,9 +10,9 @@ from src.modules.elevation_analysis.domain.exceptions import (
 from src.modules.elevation_analysis.domain.ports import (
     ElevationAnalysisProvider,
     ElevationContourRepository,
-    ZoneGeometryReader,
 )
 from src.shared.domain import GeoMultiLineString
+from src.shared.domain.ports import ZoneGeometryReader
 
 
 class GenerateZoneContours:

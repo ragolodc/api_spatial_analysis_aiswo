@@ -13,8 +13,8 @@ from src.modules.elevation_analysis.domain.exceptions import (
 from src.modules.elevation_analysis.domain.ports import (
     ElevationAnalysisProvider,
     ElevationAnalysisRepository,
-    ZoneGeometryReader,
 )
+from src.shared.domain.ports import ZoneGeometryReader
 
 
 class RunZoneElevationAnalysis:

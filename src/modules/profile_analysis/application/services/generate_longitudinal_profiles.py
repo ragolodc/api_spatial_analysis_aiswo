@@ -1,5 +1,6 @@
 from src.modules.profile_analysis.application.services._geometry import (
     circular_window,
+    insert_anchors,
     iter_linear_space,
     normalize_angle,
     polar_to_lon_lat,
@@ -17,11 +18,16 @@ class GenerateLongitudinalProfiles:
 
     def execute(self, analysis_input: ProfileAnalysisInput) -> list[LongitudinalProfile]:
         max_radius = max(analysis_input.radii_m)
-        radii = iter_linear_space(
+        base_radii = iter_linear_space(
             0.0,
             max_radius,
             analysis_input.longitudinal_spacing_m,
             include_end=True,
+        )
+        radii = insert_anchors(
+            base_radii,
+            list(analysis_input.radii_m),
+            analysis_input.longitudinal_spacing_m,
         )
 
         if analysis_input.pivot_kind == PivotKind.CIRCULAR:

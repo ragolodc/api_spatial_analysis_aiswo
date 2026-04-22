@@ -40,6 +40,18 @@ def iter_linear_space(start: float, end: float, step: float, include_end: bool) 
     return values
 
 
+def insert_anchors(values: list[float], anchors: list[float], step: float) -> list[float]:
+    """Return *values* with any *anchors* not already covered inserted and sorted.
+
+    A grid value is considered to "cover" an anchor when they are within
+    ``step * 0.5`` of each other, which handles normal floating-point drift
+    from accumulated additions.
+    """
+    epsilon = step * 0.5
+    extra = [a for a in anchors if not any(abs(v - a) <= epsilon for v in values)]
+    return sorted(values + extra)
+
+
 def polar_to_lon_lat(
     center_lon: float,
     center_lat: float,

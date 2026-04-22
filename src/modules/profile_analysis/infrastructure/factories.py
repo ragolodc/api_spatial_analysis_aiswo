@@ -29,9 +29,6 @@ from src.modules.profile_analysis.infrastructure.providers import (
 from src.modules.profile_analysis.infrastructure.warehouses import (
     ClickHouseProfilePointWarehouse,
 )
-from src.modules.profile_analysis.infrastructure.warehouses.clickhouse_schema import (
-    clickhouse_connect,
-)
 from src.shared.config import settings
 from src.shared.db.session import get_db
 from src.shared.domain import ElevationSourceNotConfigured, ElevationSourceReader

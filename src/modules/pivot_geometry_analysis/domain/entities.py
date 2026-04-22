@@ -109,6 +109,12 @@ class NodeKind:
     NEUTRAL = "neutral"  # δ == 0
 
 
+class RunKind:
+    TENSION = "tension"
+    COMPRESSION = "compression"
+    NEUTRAL = "neutral"
+
+
 @dataclass(frozen=True)
 class NodeStressResult:
     """Structural condition at each tower node (between two consecutive spans)."""

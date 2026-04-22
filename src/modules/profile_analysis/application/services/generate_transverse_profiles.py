@@ -27,7 +27,9 @@ class GenerateTransverseProfiles:
 
         return profiles
 
-    def _build_points(self, analysis_input: ProfileAnalysisInput, radius_m: float) -> list[ProfileSamplePoint]:
+    def _build_points(
+        self, analysis_input: ProfileAnalysisInput, radius_m: float
+    ) -> list[ProfileSamplePoint]:
         if analysis_input.pivot_kind == PivotKind.CIRCULAR:
             angle_start = 0.0
             angle_end = 360.0

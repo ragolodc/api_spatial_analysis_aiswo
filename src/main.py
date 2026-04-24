@@ -13,6 +13,9 @@ from src.modules.elevation_analysis.presentation.features_router import (
 from src.modules.elevation_analysis.presentation.processes_router import (
     router as elevation_analysis_processes_router,
 )
+from src.modules.pivot_geometry_analysis.presentation.processes_router import (
+    router as slope_analysis_processes_router,
+)
 from src.modules.profile_analysis.presentation.processes_router import (
     router as profile_analysis_processes_router,
 )
@@ -129,13 +132,14 @@ def create_app(*, init_infraestructure: bool = True) -> FastAPI:
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
+    app.include_router(elevation_sources_router, prefix=API_V1_PREFIX)
     app.include_router(ogc_landing_router, prefix=API_V1_PREFIX)
     app.include_router(zones_features_router, prefix=API_V1_PREFIX)
-    app.include_router(elevation_sources_router, prefix=API_V1_PREFIX)
     app.include_router(elevation_analysis_features_router, prefix=API_V1_PREFIX)
     app.include_router(elevation_analysis_processes_router, prefix=API_V1_PREFIX)
     app.include_router(profile_analysis_processes_router, prefix=API_V1_PREFIX)
     app.include_router(elevation_processes_router, prefix=API_V1_PREFIX)
+    app.include_router(slope_analysis_processes_router, prefix=API_V1_PREFIX)
 
     return app
 

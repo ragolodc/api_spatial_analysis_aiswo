@@ -8,3 +8,7 @@ class ProfileNotReady(PivotGeometryException):
 
 class ProfileJobNotFound(PivotGeometryException):
     """Raised when the referenced profile analysis job does not exist."""
+
+
+class SlopeAnalysisJobNotFound(PivotGeometryException):
+    """Raised when the referenced slope analysis job does not exist."""

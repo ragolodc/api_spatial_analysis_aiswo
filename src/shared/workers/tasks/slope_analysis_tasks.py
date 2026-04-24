@@ -1,0 +1,70 @@
+import logging
+from typing import Any
+from uuid import UUID
+
+from src.modules.pivot_geometry_analysis.application.commands import (
+    PersistSlopeAnalysisJob,
+)
+from src.modules.pivot_geometry_analysis.domain.entities import (
+    SlopeAnalysisJobRequest,
+)
+from src.modules.pivot_geometry_analysis.infrastructure.factories import get_run_slope_analysis
+from src.modules.pivot_geometry_analysis.infrastructure.persistence import (
+    SQLAlchemySlopeAnalysisJobRepository,
+)
+from src.shared.db.session import SessionLocal
+from src.shared.workers.celery_app import celery_app
+
+logger = logging.getLogger(__name__)
+
+
+@celery_app.task(name="src.shared.workers.tasks.slope_analysis_tasks.generate_slope_analysis")
+def generate_slope_analysis(
+    request_id: UUID, zone_id: UUID, payload: dict[str, Any]
+) -> dict[str, Any]:
+    """Run slope generation asynchronously and return generated slope payload."""
+    logger.info(
+        "Slope analysis job started",
+        extra={
+            "request_id": request_id,
+            "zone_id": zone_id,
+            "payload_keys": sorted(payload.keys()),
+        },
+    )
+
+    with SessionLocal() as db:
+        persist_job = PersistSlopeAnalysisJob(repository=SQLAlchemySlopeAnalysisJobRepository(db))
+        try:
+            persist_job.mark_running(request_id=request_id)
+            job_request = SlopeAnalysisJobRequest(
+                request_id=request_id, zone_id=zone_id, payload=payload
+            )
+            result = get_run_slope_analysis(db=db).execute(db, request=job_request)
+
+            result_payload = {
+                "request_id": result.request_id,
+                "longitudinal_slope_analysis": result.longitudinal_slope_analysis,
+                "transversal_slope_analysis": result.transversal_slope_analysis,
+                "torsional_slope_analysis": result.torsional_slope_analysis,
+                "structural_stress_analysis": result.structural_stress_analysis,
+                "crop_clearence_analysis": result.crop_clearence_analysis,
+            }
+            persist_job.mark_completed(UUID(request_id), result_payload=result_payload)
+
+            logger.info(
+                "Profile analysis job completed",
+                extra={
+                    "request_id": result.request_id,
+                    "longitudinal_slope_analysis": result.longitudinal_slope_analysis,
+                    "transversal_slope_analysis": result.transversal_slope_analysis,
+                    "torsional_slope_analysis": result.torsional_slope_analysis,
+                    "structural_stress_analysis": result.structural_stress_analysis,
+                    "crop_clearence_analysis": result.crop_clearence_analysis,
+                },
+            )
+        except Exception as exc:
+            persist_job.mark_failed(request_id, error_message=str(exc))
+            logger.exception(
+                "Slope analysis job failed",
+                extra={"request_id": request_id, "zone_id": zone_id},
+            )

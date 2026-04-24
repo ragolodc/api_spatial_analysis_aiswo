@@ -15,7 +15,10 @@ celery_app.conf.update(
     task_routes={
         "src.shared.workers.tasks.profile_analysis_tasks.generate_zone_profiles": {
             "queue": settings.profile_analysis_queue,
-        }
+        },
+        "src.shared.workers.tasks.slope_analysis_tasks.generate_slope_analysis": {
+            "queue": settings.slope_analysis_queue
+        },
     },
     task_serializer="json",
     result_serializer="json",
@@ -26,4 +29,5 @@ celery_app.conf.update(
 
 celery_app.conf.include = [
     "src.shared.workers.tasks.profile_analysis_tasks",
+    "src.shared.workers.tasks.slope_analysis_tasks",
 ]

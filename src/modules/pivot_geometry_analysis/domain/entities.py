@@ -1,7 +1,10 @@
 from dataclasses import dataclass
+from datetime import datetime
+from enum import StrEnum
+from typing import Any
 from uuid import UUID
 
-from src.modules.pivot_geometry_analysis.domain.value_objects import SlopeValue
+from src.modules.pivot_geometry_analysis.domain.value_objects import SlopeValue, ThresholdConfig
 
 # ---------------------------------------------------------------------------
 # Longitudinal Slope
@@ -145,3 +148,56 @@ class StructuralStressAnalysis:
     request_id: UUID
     nodes: list[NodeStressResult]
     runs: list[StressRunResult]
+
+
+# ---------------------------------------------------------------------------
+# Slope Analysis Job
+# ---------------------------------------------------------------------------
+
+
+class SlopeAnalysisJobStatus(StrEnum):
+    QUEUED = "queued"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+@dataclass(frozen=True)
+class SlopeAnalysisJob:
+    request_id: UUID
+    zone_id: UUID
+    status: SlopeAnalysisJobStatus
+    payload: dict[str, Any]
+    result_payload: dict[str, Any] | None
+    error_message: str | None
+    queued_at: datetime
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+
+
+@dataclass(frozen=True)
+class SlopeAnalysisInput:
+    longitudinal_slope_config: ThresholdConfig
+    transversal_slope_config: ThresholdConfig
+    torsional_config: ThresholdConfig
+    torsional_longitudinal_config: ThresholdConfig
+    structural_stress_config: ThresholdConfig
+    crop_clearence_h_boom_meters: float
+    crop_clearence_crop_risk_meters: float
+    crop_clearence_ground_risk_meters: float
+
+
+@dataclass(frozen=True)
+class SlopeAnalysisJobRequest:
+    request_id: UUID
+    zone_id: UUID
+    payload: dict[str, Any]
+
+
+class SlopeAnalysisResult:
+    request_id: UUID
+    longitudinal_slope_analysis: LongitudinalSlopeAnalysis
+    transversal_slope_analysis: TransversalSlopeAnalysis
+    torsional_slope_analysis: TorsionalSlopeAnalysis
+    structural_stress_analysis: StructuralStressAnalysis
+    crop_clearence_analysis: CropClearanceAnalysis

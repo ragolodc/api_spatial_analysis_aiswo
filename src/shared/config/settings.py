@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     clickhouse_password: str = ""
     clickhouse_database: str = "spatial_analytics"
     profile_analysis_queue: str = "profile_analysis"
+    slope_analysis_queue: str = "slope_analysis"
     profile_analysis_max_points: int = 500000
 
     model_config = SettingsConfigDict(

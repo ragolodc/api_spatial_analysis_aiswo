@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class SlopeAnalysisInputs(BaseModel):
     zone_id: UUID
+    profile_analysis_id: UUID
 
 
 class QueueSlopeAnalysisRequest(BaseModel):

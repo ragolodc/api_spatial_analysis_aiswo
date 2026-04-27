@@ -166,6 +166,7 @@ class SlopeAnalysisJobStatus(StrEnum):
 class SlopeAnalysisJob:
     request_id: UUID
     zone_id: UUID
+    profile_analysis_id: UUID
     status: SlopeAnalysisJobStatus
     payload: dict[str, Any]
     result_payload: dict[str, Any] | None
@@ -191,9 +192,11 @@ class SlopeAnalysisInput:
 class SlopeAnalysisJobRequest:
     request_id: UUID
     zone_id: UUID
+    profile_analysis_id: UUID
     payload: dict[str, Any]
 
 
+@dataclass(frozen=True)
 class SlopeAnalysisResult:
     request_id: UUID
     longitudinal_slope_analysis: LongitudinalSlopeAnalysis

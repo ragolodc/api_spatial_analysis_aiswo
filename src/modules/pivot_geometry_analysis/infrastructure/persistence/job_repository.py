@@ -21,6 +21,7 @@ class SQLAlchemySlopeAnalysisJobRepository(SlopeAnalysisJobRepository):
         model = SlopeAnalysisJobModel(
             request_id=job.request_id,
             zone_id=job.zone_id,
+            profile_analysis_id=job.profile_analysis_id,
             status=job.status.value,
             payload=job.payload,
             result_payload=job.result_payload,
@@ -51,6 +52,7 @@ class SQLAlchemySlopeAnalysisJobRepository(SlopeAnalysisJobRepository):
         model.queued_at = job.queued_at
         model.started_at = job.started_at
         model.completed_at = job.completed_at
+        model.profile_analysis_id = job.profile_analysis_id
         self._db.commit()
         self._db.refresh(model)
         return self._to_entity(model)
@@ -59,6 +61,7 @@ class SQLAlchemySlopeAnalysisJobRepository(SlopeAnalysisJobRepository):
         return SlopeAnalysisJob(
             request_id=model.request_id,
             zone_id=model.zone_id,
+            profile_analysis_id=model.profile_analysis_id,
             status=SlopeAnalysisJobStatus(model.status),
             payload=model.payload,
             result_payload=model.result_payload,

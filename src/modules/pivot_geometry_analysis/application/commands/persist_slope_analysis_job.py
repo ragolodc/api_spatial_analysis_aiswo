@@ -14,10 +14,13 @@ class PersistSlopeAnalysisJob:
     def __init__(self, repository: SlopeAnalysisJobRepository) -> None:
         self._repository = repository
 
-    def queue(self, request_id: UUID, zone_id: UUID, payload: dict[str, Any]) -> SlopeAnalysisJob:
+    def queue(
+        self, request_id: UUID, zone_id: UUID, profile_analysis_id: UUID, payload: dict[str, Any]
+    ) -> SlopeAnalysisJob:
         job = SlopeAnalysisJob(
             request_id=request_id,
             zone_id=zone_id,
+            profile_analysis_id=profile_analysis_id,
             status=SlopeAnalysisJobStatus.QUEUED,
             payload=payload,
             result_payload=None,
@@ -63,6 +66,7 @@ class PersistSlopeAnalysisJob:
             SlopeAnalysisJob(
                 request_id=job.request_id,
                 zone_id=job.zone_id,
+                profile_analysis_id=job.profile_analysis_id,
                 status=status,
                 payload=job.payload,
                 result_payload=result_payload if result_payload is not None else job.result_payload,

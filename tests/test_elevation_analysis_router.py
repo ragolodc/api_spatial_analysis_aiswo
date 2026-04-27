@@ -85,7 +85,6 @@ def test_run_zone_elevation_analysis_maps_zone_not_found(client) -> None:
         _API_V1_PREFIX + "/processes/analyze-zone-elevation/execution",
         json={"inputs": {"zone_id": str(uuid4())}},
     )
-    print("----------------------------------------------")
 
     assert response.status_code == 404
     assert response.json()["message"] == "Zone does not exist"

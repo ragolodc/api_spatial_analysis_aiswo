@@ -14,6 +14,7 @@ class CelerySlopeAnalysisDispatcher(SlopeAnalysisJobDispatcher):
             kwargs={
                 "request_id": str(request.request_id),
                 "zone_id": str(request.zone_id),
+                "profile_analysis_id": str(request.profile_analysis_id),
                 "payload": request.payload,
             },
         )

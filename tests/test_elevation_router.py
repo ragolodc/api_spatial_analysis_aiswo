@@ -118,6 +118,4 @@ def test_highest_point_requires_polygon_or_zone_id(client) -> None:
         f"{_API_V1_PREFIX}/processes/highest-point/execution", json={"inputs": {}}
     )
 
-    print(response)
-
     assert response.status_code == 422

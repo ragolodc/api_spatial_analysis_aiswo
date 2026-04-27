@@ -81,8 +81,10 @@ def test_sample_profile_elevations_enriches_all_profiles() -> None:
         ],
     )
 
-    t, l = service.sample_all_profiles([profile_transversal], [profile_longitudinal])
-    assert len(t) == 1
-    assert len(l) == 1
-    assert t[0].points[0].elevation_m == 123.4
-    assert l[0].points[0].elevation_m == 123.4
+    t_profile, l_profile = service.sample_all_profiles(
+        [profile_transversal], [profile_longitudinal]
+    )
+    assert len(t_profile) == 1
+    assert len(l_profile) == 1
+    assert t_profile[0].points[0].elevation_m == 123.4
+    assert l_profile[0].points[0].elevation_m == 123.4

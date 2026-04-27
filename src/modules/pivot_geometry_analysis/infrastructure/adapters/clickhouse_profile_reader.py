@@ -89,4 +89,4 @@ class ClickHouseProfileReader:
         model = self._db.get(ProfileAnalysisJobModel, request_id)
         if model is None:
             raise ValueError(f"ProfileAnalysisJob {request_id} not found")
-        return tuple(sorted(float(r) for r in model.payload["radii_m"]))
+        return tuple(sorted(float(r) for r in model.payload["inputs"]["radii_m"]))

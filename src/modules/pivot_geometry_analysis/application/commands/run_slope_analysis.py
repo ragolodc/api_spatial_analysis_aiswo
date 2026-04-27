@@ -24,11 +24,11 @@ class RunSlopeAnalysis:
     def __init__(
         self,
         profile_reader: ProfileReader,
-        crop_clearence_computator: ComputeCropClearance,
-        longitudinal_slope_computator: ComputeLongitudinalSlope,
-        transverse_slope_computator: ComputeTransversalSlope,
-        torsional_slope_computator: ComputeTorsionalSlope,
-        structural_stress_computador: ComputeStructuralStress,
+        crop_clearence_computator: ComputeCropClearance | None = None,
+        longitudinal_slope_computator: ComputeLongitudinalSlope | None = None,
+        transverse_slope_computator: ComputeTransversalSlope | None = None,
+        torsional_slope_computator: ComputeTorsionalSlope | None = None,
+        structural_stress_computador: ComputeStructuralStress | None = None,
     ) -> None:
         self._profile_reader = profile_reader
         self._crop_clearence_computator = crop_clearence_computator or ComputeCropClearance()
@@ -44,14 +44,14 @@ class RunSlopeAnalysis:
     def execute(self, request: SlopeAnalysisJobRequest) -> SlopeAnalysisResult:
         analysis_input = self._parse_input(request)
         longitudinal_profiles = self._profile_reader.get_longitudinal_profiles(
-            request_id=request.request_id
+            request_id=request.profile_analysis_id
         )
         transversal_profiles = self._profile_reader.get_transversal_profiles(
-            request_id=request.request_id
+            request_id=request.profile_analysis_id
         )
-        radii_m = self._profile_reader.get_radii_m(request_id=request.request_id)
-
+        radii_m = self._profile_reader.get_radii_m(request_id=request.profile_analysis_id)
         longitudinal_slope_analysis = self._longitudinal_slope_computator.execute(
+            request_id=request.request_id,
             profiles=longitudinal_profiles,
             radii_m=radii_m,
             config=analysis_input.longitudinal_slope_config,
@@ -84,6 +84,7 @@ class RunSlopeAnalysis:
             h_boom_m=analysis_input.crop_clearence_h_boom_meters,
             crop_risk_m=analysis_input.crop_clearence_crop_risk_meters,
             ground_risk_m=analysis_input.crop_clearence_ground_risk_meters,
+            structural=structural_stress_analysis,
         )
 
         return SlopeAnalysisResult(

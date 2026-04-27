@@ -40,7 +40,12 @@ def iter_linear_space(start: float, end: float, step: float, include_end: bool) 
     return values
 
 
-def insert_anchors(values: list[float], anchors: list[float], step: float) -> list[float]:
+# TODO : voy a forzar los puntos, pero esto hay que revisarlo
+def insert_anchors(values, anchors):
+    return sorted(set(values) | set(anchors))
+
+
+def _insert_anchors(values: list[float], anchors: list[float], step: float) -> list[float]:
     """Return *values* with any *anchors* not already covered inserted and sorted.
 
     A grid value is considered to "cover" an anchor when they are within

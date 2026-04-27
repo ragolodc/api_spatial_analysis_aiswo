@@ -24,10 +24,11 @@ class GenerateLongitudinalProfiles:
             analysis_input.longitudinal_spacing_m,
             include_end=True,
         )
+
         radii = insert_anchors(
             base_radii,
             list(analysis_input.radii_m),
-            analysis_input.longitudinal_spacing_m,
+            # analysis_input.longitudinal_spacing_m,
         )
 
         if analysis_input.pivot_kind == PivotKind.CIRCULAR:

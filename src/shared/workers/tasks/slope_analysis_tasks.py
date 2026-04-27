@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 @celery_app.task(name="src.shared.workers.tasks.slope_analysis_tasks.generate_slope_analysis")
 def generate_slope_analysis(
-    request_id: UUID, zone_id: UUID, payload: dict[str, Any]
+    request_id: UUID, zone_id: UUID, profile_analysis_id: UUID, payload: dict[str, Any]
 ) -> dict[str, Any]:
     """Run slope generation asynchronously and return generated slope payload."""
     logger.info(
@@ -28,6 +28,7 @@ def generate_slope_analysis(
         extra={
             "request_id": request_id,
             "zone_id": zone_id,
+            "profile_analysis_id": profile_analysis_id,
             "payload_keys": sorted(payload.keys()),
         },
     )
@@ -37,29 +38,34 @@ def generate_slope_analysis(
         try:
             persist_job.mark_running(request_id=request_id)
             job_request = SlopeAnalysisJobRequest(
-                request_id=request_id, zone_id=zone_id, payload=payload
+                request_id=request_id,
+                zone_id=zone_id,
+                profile_analysis_id=profile_analysis_id,
+                payload=payload,
             )
-            result = get_run_slope_analysis(db=db).execute(db, request=job_request)
+            result = get_run_slope_analysis(db=db).execute(request=job_request)
 
             result_payload = {
-                "request_id": result.request_id,
-                "longitudinal_slope_analysis": result.longitudinal_slope_analysis,
-                "transversal_slope_analysis": result.transversal_slope_analysis,
-                "torsional_slope_analysis": result.torsional_slope_analysis,
-                "structural_stress_analysis": result.structural_stress_analysis,
-                "crop_clearence_analysis": result.crop_clearence_analysis,
+                "request_id": str(result.request_id),
+                "longitudinal_slope_analysis": str(result.longitudinal_slope_analysis.request_id),
+                "transversal_slope_analysis": str(result.transversal_slope_analysis.request_id),
+                "torsional_slope_analysis": str(result.torsional_slope_analysis.request_id),
+                "structural_stress_analysis": str(result.structural_stress_analysis.request_id),
+                "crop_clearence_analysis": str(result.crop_clearence_analysis.request_id),
             }
             persist_job.mark_completed(UUID(request_id), result_payload=result_payload)
 
             logger.info(
                 "Profile analysis job completed",
                 extra={
-                    "request_id": result.request_id,
-                    "longitudinal_slope_analysis": result.longitudinal_slope_analysis,
-                    "transversal_slope_analysis": result.transversal_slope_analysis,
-                    "torsional_slope_analysis": result.torsional_slope_analysis,
-                    "structural_stress_analysis": result.structural_stress_analysis,
-                    "crop_clearence_analysis": result.crop_clearence_analysis,
+                    "request_id": str(result.request_id),
+                    "longitudinal_slope_analysis": str(
+                        result.longitudinal_slope_analysis.request_id
+                    ),
+                    "transversal_slope_analysis": str(result.transversal_slope_analysis.request_id),
+                    "torsional_slope_analysis": str(result.torsional_slope_analysis.request_id),
+                    "structural_stress_analysis": str(result.structural_stress_analysis.request_id),
+                    "crop_clearence_analysis": str(result.crop_clearence_analysis.request_id),
                 },
             )
         except Exception as exc:

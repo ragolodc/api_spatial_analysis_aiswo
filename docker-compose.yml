@@ -29,6 +29,11 @@ services:
     container_name: ${WORKER_PROFILE_CONTAINER_NAME:-aiswo_worker_profile}
     env_file:
       - .env
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     depends_on:
       db:
         condition: service_healthy
@@ -51,6 +56,11 @@ services:
     container_name: ${WORKER_SLOPE_CONTAINER_NAME:-aiswo_worker_slope}
     env_file:
       - .env
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     depends_on:
       db:
         condition: service_healthy

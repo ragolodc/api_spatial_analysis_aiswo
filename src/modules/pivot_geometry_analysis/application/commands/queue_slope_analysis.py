@@ -21,10 +21,20 @@ class QueueSlopeAnalysis:
         self._dispatcher = dispatcher
         self._persist_job = persist_job
 
-    def execute(self, zone_id: UUID, payload: dict[str, Any]) -> UUID:
+    def execute(self, zone_id: UUID, profile_analysis_id: UUID, payload: dict[str, Any]) -> UUID:
         request_id = uuid4()
-        self._persist_job.queue(request_id=request_id, zone_id=zone_id, payload=payload)
+        self._persist_job.queue(
+            request_id=request_id,
+            zone_id=zone_id,
+            profile_analysis_id=profile_analysis_id,
+            payload=payload,
+        )
         self._dispatcher.dispatch(
-            SlopeAnalysisJobRequest(request_id=request_id, zone_id=zone_id, payload=payload)
+            SlopeAnalysisJobRequest(
+                request_id=request_id,
+                zone_id=zone_id,
+                profile_analysis_id=profile_analysis_id,
+                payload=payload,
+            )
         )
         return request_id

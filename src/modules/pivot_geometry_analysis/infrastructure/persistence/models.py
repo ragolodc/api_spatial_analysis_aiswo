@@ -19,6 +19,10 @@ class SlopeAnalysisJobModel(Base):
         nullable=False,
         index=True,
     )
+    profile_analysis_id: Mapped[UUIDType | None] = mapped_column(
+        UUID(as_uuid=True),
+        nullable=True,
+    )
     status: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     payload: Mapped[dict] = mapped_column(JSON, nullable=False)
     result_payload: Mapped[dict | None] = mapped_column(JSON, nullable=True)

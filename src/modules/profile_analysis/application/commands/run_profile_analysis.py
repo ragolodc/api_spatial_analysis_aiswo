@@ -30,9 +30,10 @@ class RunProfileAnalysis:
         transverse_profiles = self._transverse_generator.execute(analysis_input)
         longitudinal_profiles = self._longitudinal_generator.execute(analysis_input)
 
-        sampled_transverse_profiles = self._elevation_sampler.sample_transverse(transverse_profiles)
-        sampled_longitudinal_profiles = self._elevation_sampler.sample_longitudinal(
-            longitudinal_profiles
+        sampled_transverse_profiles, sampled_longitudinal_profiles = (
+            self._elevation_sampler.sample_all_profiles(
+                transverse_profiles=transverse_profiles, longitudinal_profiles=longitudinal_profiles
+            )
         )
 
         total_points = sum(len(p.points) for p in sampled_transverse_profiles) + sum(

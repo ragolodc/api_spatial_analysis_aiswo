@@ -60,3 +60,29 @@ def test_sample_profile_elevations_enriches_longitudinal_profiles() -> None:
     result = service.sample_longitudinal([profile])
 
     assert result[0].points[0].elevation_m == 123.4
+
+
+def test_sample_profile_elevations_enriches_all_profiles() -> None:
+    service = SampleProfileElevations(FakeElevationProvider())
+    profile_transversal = TransverseProfile(
+        radius_m=100.0,
+        points=[
+            ProfileSamplePoint(
+                longitude=0.0, latitude=0.0, distance_m=0.0, radius_m=100.0, angle_deg=0.0
+            )
+        ],
+    )
+    profile_longitudinal = LongitudinalProfile(
+        azimuth_deg=45.0,
+        points=[
+            ProfileSamplePoint(
+                longitude=0.0, latitude=0.0, distance_m=10.0, radius_m=10.0, angle_deg=45.0
+            )
+        ],
+    )
+
+    t, l = service.sample_all_profiles([profile_transversal], [profile_longitudinal])
+    assert len(t) == 1
+    assert len(l) == 1
+    assert t[0].points[0].elevation_m == 123.4
+    assert l[0].points[0].elevation_m == 123.4

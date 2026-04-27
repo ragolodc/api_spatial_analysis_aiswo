@@ -2,6 +2,8 @@ from uuid import UUID
 
 from src.modules.profile_analysis.domain.entities import (
     LongitudinalProfile,
+    ProfileSamplePoint,
+    ProfileType,
     TransverseProfile,
 )
 from src.modules.profile_analysis.domain.ports import ProfileElevationProvider
@@ -18,19 +20,46 @@ class SampleProfileElevations:
         return self._provider.source_id
 
     def sample_transverse(self, profiles: list[TransverseProfile]) -> list[TransverseProfile]:
-        return [
-            TransverseProfile(
-                radius_m=profile.radius_m,
-                points=self._provider.sample_points(profile.points),
-            )
-            for profile in profiles
-        ]
+        sampled_transverse, _ = self.sample_all_profiles(profiles, [])
+        return sampled_transverse
 
     def sample_longitudinal(self, profiles: list[LongitudinalProfile]) -> list[LongitudinalProfile]:
-        return [
-            LongitudinalProfile(
-                azimuth_deg=profile.azimuth_deg,
-                points=self._provider.sample_points(profile.points),
-            )
-            for profile in profiles
-        ]
+        _, sampled_longitudinal = self.sample_all_profiles([], profiles)
+        return sampled_longitudinal
+
+    def sample_all_profiles(
+        self,
+        transverse_profiles: list[TransverseProfile],
+        longitudinal_profiles: list[LongitudinalProfile],
+    ) -> tuple[list[TransverseProfile], list[LongitudinalProfile]]:
+        all_points: list[ProfileSamplePoint] = []
+        profile_slices = []
+
+        for profile in transverse_profiles:
+            start = len(all_points)
+            all_points.extend(profile.points)
+            end = len(all_points)
+            profile_slices.append((ProfileType.TRANSVERSE, profile.radius_m, start, end))
+
+        for profile in longitudinal_profiles:
+            start = len(all_points)
+            all_points.extend(profile.points)
+            end = len(all_points)
+            profile_slices.append((ProfileType.LONGITUDINAL, profile.azimuth_deg, start, end))
+
+        if not all_points:
+            return [], []
+
+        sampled_points = self._provider.sample_points(all_points)
+
+        new_transverse: list[TransverseProfile] = []
+        new_longitudinal: list[LongitudinalProfile] = []
+
+        for kind, value, start, end in profile_slices:
+            points = sampled_points[start:end]
+            if kind == ProfileType.TRANSVERSE:
+                new_transverse.append(TransverseProfile(radius_m=value, points=points))
+            else:
+                new_longitudinal.append(LongitudinalProfile(azimuth_deg=value, points=points))
+
+        return new_transverse, new_longitudinal

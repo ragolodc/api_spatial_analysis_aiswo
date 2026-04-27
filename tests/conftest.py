@@ -10,7 +10,7 @@ from src.shared.db.session import get_db
 
 @pytest.fixture(autouse=True)
 def _noop_startup():
-    with patch("src.main.init_db"), patch("src.main.init_clickhouse"):
+    with patch("src.main.init_clickhouse"):
         yield
 
 

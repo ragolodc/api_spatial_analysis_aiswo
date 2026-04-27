@@ -17,13 +17,16 @@ services:
       - "${API_AISWO_GEOSPATIAL_PORT}:${API_PORT}"
     volumes:
       - .:/app
-    command: uvicorn src.main:app --host ${API_HOST} --port ${API_PORT} --reload
+    command: >
+     uvicorn src.main:app
+     --host ${API_HOST}
+     --port ${API_PORT}
+     --reload
+     --log-level info
 
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: ${WORKER_CONTAINER_NAME:-aiswo_spatial_worker}
+  worker_profile:
+    build: .
+    container_name: ${WORKER_PROFILE_CONTAINER_NAME:-aiswo_worker_profile}
     env_file:
       - .env
     depends_on:
@@ -35,7 +38,35 @@ services:
         condition: service_healthy
     volumes:
       - .:/app
-    command: celery -A src.shared.workers.celery_app worker --loglevel=INFO --queues=${PROFILE_ANALYSIS_QUEUE:-profile_analysis}
+    command: >
+     celery -A src.shared.workers.celery_app worker
+     --loglevel=INFO
+     --queues=profile_analysis
+     --concurrency=1
+     --prefetch-multiplier=1
+     --hostname=worker.profile@%h
+
+  worker_slope:
+    build: .
+    container_name: ${WORKER_SLOPE_CONTAINER_NAME:-aiswo_worker_slope}
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      clickhouse:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    command: >
+      celery -A src.shared.workers.celery_app worker
+      --loglevel=INFO
+      --queues=slope_analysis
+      --concurrency=1
+      --prefetch-multiplier=1
+      --hostname=worker.slope@%h
 
   db:
     image: postgis/postgis:16-3.4

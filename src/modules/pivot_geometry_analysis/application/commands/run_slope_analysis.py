@@ -1,4 +1,4 @@
-from typing import Any
+import logging
 
 from src.modules.pivot_geometry_analysis.application.services import (
     ComputeCropClearance,
@@ -14,6 +14,8 @@ from src.modules.pivot_geometry_analysis.domain.entities import (
 )
 from src.modules.pivot_geometry_analysis.domain.ports import ProfileReader
 from src.modules.pivot_geometry_analysis.domain.value_objects import ThresholdConfig
+
+logger = logging.getLogger(__name__)
 
 
 class RunSlopeAnalysis:
@@ -39,7 +41,7 @@ class RunSlopeAnalysis:
             structural_stress_computador or ComputeStructuralStress()
         )
 
-    def execute(self, request: SlopeAnalysisJobRequest) -> dict[str, Any]:
+    def execute(self, request: SlopeAnalysisJobRequest) -> SlopeAnalysisResult:
         analysis_input = self._parse_input(request)
         longitudinal_profiles = self._profile_reader.get_longitudinal_profiles(
             request_id=request.request_id

@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -22,8 +23,14 @@ from src.modules.profile_analysis.presentation.processes_router import (
 from src.modules.zones.presentation.features_router import router as zones_features_router
 from src.shared.config import settings
 from src.shared.domain.exceptions import ElevationSourceNotConfigured
-from src.shared.infrastructure.startup import init_clickhouse, init_db
+from src.shared.infrastructure.startup import init_clickhouse
 from src.shared.presentation.ogc_landing_router import router as ogc_landing_router
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(process)d] [%(levelname)s] [%(name)s] %(message)s",
+    force=True,
+)
 
 
 def _error_response(
@@ -71,7 +78,7 @@ def _sanitize_errors(errors: list) -> list:
 
 @asynccontextmanager
 async def _lifespan(_app: FastAPI):
-    init_db()
+    # init_db()
     init_clickhouse()
     yield
 

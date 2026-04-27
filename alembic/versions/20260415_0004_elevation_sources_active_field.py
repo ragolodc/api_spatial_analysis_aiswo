@@ -5,9 +5,8 @@ Revises: 20260415_0003
 Create Date: 2026-04-15 00:00:00
 """
 
-import uuid
-
 import sqlalchemy as sa
+
 from alembic import op
 
 revision = "20260415_0004"

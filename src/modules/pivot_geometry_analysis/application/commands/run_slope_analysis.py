@@ -98,23 +98,21 @@ class RunSlopeAnalysis:
 
     def _parse_input(self, request: SlopeAnalysisJobRequest) -> SlopeAnalysisInput:
         raw_input = request.payload.get("inputs", request.payload)
-
-        longitudinal_slope_config = raw_input.get("longitudinal_slope_config", ThresholdConfig(18))
-
-        transversal_slope_config = raw_input.get("transversal_slope_config", ThresholdConfig(18))
-
-        torsional_config = raw_input.get("torsional_config", ThresholdConfig(18))
-
-        torsional_longitudinal_config = raw_input.get(
-            "torsional_longitudinal_config", ThresholdConfig(18)
+        longitudinal_slope_max_threshold = raw_input.get("longitudinal_slope_max_threshold", 18)
+        transversal_slope_max_threshold = raw_input.get("transversal_slope_max_threshold", 18)
+        torsional_max_threshold = raw_input.get("torsional_max_threshold", 18)
+        torsional_longitudinal_max_threshold = raw_input.get(
+            "torsional_longitudinal_max_threshold", 18
         )
+        structural_stress_max_threshold = raw_input.get("structural_stress_max_threshold", 23)
 
-        structural_stress_config = raw_input.get("structural_stress_config", ThresholdConfig(23))
-
+        longitudinal_slope_config = ThresholdConfig(longitudinal_slope_max_threshold)
+        transversal_slope_config = ThresholdConfig(transversal_slope_max_threshold)
+        torsional_config = ThresholdConfig(torsional_max_threshold)
+        torsional_longitudinal_config = ThresholdConfig(torsional_longitudinal_max_threshold)
+        structural_stress_config = ThresholdConfig(structural_stress_max_threshold)
         crop_clearance_h_boom_meters = raw_input.get("crop_clearance_h_boom_meters", 2.90)
-
         crop_clearance_crop_risk_meters = raw_input.get("crop_clearance_crop_risk_meters", 2.0)
-
         crop_clearance_ground_risk_meters = raw_input.get("crop_clearance_ground_risk_meters", 1.0)
 
         return SlopeAnalysisInput(

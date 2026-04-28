@@ -11,8 +11,12 @@ def init_db() -> None:
 
 def init_clickhouse() -> None:
     """Garantiza que el schema de ClickHouse existe al arrancar."""
+    from src.modules.pivot_geometry_analysis.infrastructure import (
+        init_clickhouse as _init_clickhouse_slope_analysis,
+    )
     from src.modules.profile_analysis.infrastructure import (
-        init_clickhouse as _init_clickhouse,
+        init_clickhouse as _init_clickhouse_profile_points,
     )
 
-    _init_clickhouse()
+    _init_clickhouse_profile_points()
+    _init_clickhouse_slope_analysis()

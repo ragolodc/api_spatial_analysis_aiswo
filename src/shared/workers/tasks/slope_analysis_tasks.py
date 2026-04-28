@@ -3,12 +3,16 @@ from typing import Any
 from uuid import UUID
 
 from src.modules.pivot_geometry_analysis.application.commands import (
+    PersistSlopeAnalysis,
     PersistSlopeAnalysisJob,
 )
 from src.modules.pivot_geometry_analysis.domain.entities import (
     SlopeAnalysisJobRequest,
 )
-from src.modules.pivot_geometry_analysis.infrastructure.factories import get_run_slope_analysis
+from src.modules.pivot_geometry_analysis.infrastructure.factories import (
+    get_run_slope_analysis,
+    get_slope_analysis_warehouse,
+)
 from src.modules.pivot_geometry_analysis.infrastructure.persistence import (
     SQLAlchemySlopeAnalysisJobRepository,
 )
@@ -44,6 +48,10 @@ def generate_slope_analysis(
                 payload=payload,
             )
             result = get_run_slope_analysis(db=db).execute(request=job_request)
+
+            warehouse = get_slope_analysis_warehouse()
+            with warehouse:
+                PersistSlopeAnalysis(warehouse).execute(result, job_request)
 
             result_payload = {
                 "request_id": str(result.request_id),

@@ -15,6 +15,9 @@ from src.modules.pivot_geometry_analysis.infrastructure.dispatchers import (
 from src.modules.pivot_geometry_analysis.infrastructure.persistence.job_repository import (
     SQLAlchemySlopeAnalysisJobRepository,
 )
+from src.modules.pivot_geometry_analysis.infrastructure.warehouses.clickhouse_slope_analysis_warehouse import (
+    ClickHouseSlopeAnalysisWarehouse,
+)
 from src.shared.config import settings
 
 
@@ -30,6 +33,16 @@ def get_profile_reader(db: Session) -> ClickHouseProfileReader:
         password=settings.clickhouse_password,
     )
     return ClickHouseProfileReader(ch_client=client, database=settings.clickhouse_database, db=db)
+
+
+def get_slope_analysis_warehouse() -> ClickHouseSlopeAnalysisWarehouse:
+    client = clickhouse_connect.get_client(
+        host=settings.clickhouse_host,
+        port=settings.clickhouse_port,
+        username=settings.clickhouse_user,
+        password=settings.clickhouse_password,
+    )
+    return ClickHouseSlopeAnalysisWarehouse(client=client, database=settings.clickhouse_database)
 
 
 def get_persist_slope_analysis_job(db: Session) -> PersistSlopeAnalysisJob:

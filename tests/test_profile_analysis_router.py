@@ -38,6 +38,10 @@ def test_queue_profile_analysis_returns_accepted(client) -> None:
                 "pivot_kind": "circular",
                 "center": [-74.05, 4.61],
                 "radii_m": [100.0, 200.0],
+                "spans": [
+                    {"position": 1, "length": 100, "dry_weight": 29, "service_weight": 45},
+                    {"position": 2, "length": 200, "dry_weight": 30, "service_weight": 40},
+                ],
                 "transverse_spacing_m": 10.0,
                 "longitudinal_spacing_m": 10.0,
                 "angular_spacing_deg": 45.0,

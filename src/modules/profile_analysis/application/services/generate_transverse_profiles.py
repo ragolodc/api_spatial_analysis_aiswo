@@ -21,7 +21,8 @@ class GenerateTransverseProfiles:
     def execute(self, analysis_input: ProfileAnalysisInput) -> list[TransverseProfile]:
         profiles: list[TransverseProfile] = []
 
-        for radius_m in analysis_input.radii_m:
+        radii_m = analysis_input.spans_config.get_radii_m()
+        for radius_m in radii_m:
             points = self._build_points(analysis_input, radius_m)
             profiles.append(TransverseProfile(radius_m=radius_m, points=points))
 

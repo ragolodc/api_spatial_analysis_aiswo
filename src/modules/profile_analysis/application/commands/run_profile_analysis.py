@@ -9,6 +9,7 @@ from src.modules.profile_analysis.domain.entities import (
     ProfileAnalysisJobRequest,
     ProfileAnalysisResult,
 )
+from src.shared.domain.entities import Spans, SpansConfig
 
 
 class RunProfileAnalysis:
@@ -56,11 +57,15 @@ class RunProfileAnalysis:
         if not isinstance(center, list) or len(center) != 2:
             raise ValueError("center must be a list of [longitude, latitude]")
 
-        radii = raw_inputs.get("radii_m", [])
-        if not isinstance(radii, list) or not radii:
-            raise ValueError("radii_m must contain at least one radius")
+        spans = raw_inputs.get("spans", None)
 
-        parsed_radii = tuple(sorted(float(radius) for radius in radii if float(radius) > 0.0))
+        if spans is None:
+            raise ValueError("Spans is required in the input payload")
+
+        spans_config = SpansConfig([Spans(**span) for span in spans])
+
+        parsed_radii = spans_config.get_radii_m()
+
         if not parsed_radii:
             raise ValueError("radii_m must contain positive values")
 
@@ -89,6 +94,7 @@ class RunProfileAnalysis:
             center_lon=float(center[0]),
             center_lat=float(center[1]),
             radii_m=parsed_radii,
+            spans_config=spans_config,
             transverse_spacing_m=transverse_spacing_m,
             longitudinal_spacing_m=longitudinal_spacing_m,
             angular_spacing_deg=angular_spacing_deg,

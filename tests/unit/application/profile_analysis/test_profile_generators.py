@@ -11,6 +11,7 @@ from src.modules.profile_analysis.domain.entities import (
     ProfileAnalysisInput,
     ProfileAnalysisJobRequest,
 )
+from src.shared.domain.entities import Spans, SpansConfig
 
 _FAKE_SOURCE_ID = uuid4()
 
@@ -43,6 +44,12 @@ def _base_input(pivot_kind: PivotKind = PivotKind.CIRCULAR) -> ProfileAnalysisIn
         center_lon=-74.05,
         center_lat=4.61,
         radii_m=(100.0, 200.0),
+        spans_config=SpansConfig(
+            [
+                Spans(position=1, length=100, dry_weight=29, service_weight=45),
+                Spans(position=2, length=200, dry_weight=30, service_weight=40),
+            ]
+        ),
         transverse_spacing_m=10.0,
         longitudinal_spacing_m=50.0,
         angular_spacing_deg=90.0,
@@ -71,7 +78,7 @@ def test_longitudinal_profiles_are_generated_per_azimuth() -> None:
     assert profiles[0].azimuth_deg == 0.0
     assert profiles[1].azimuth_deg == 90.0
     assert profiles[0].points[0].distance_m == 0.0
-    assert profiles[0].points[-1].radius_m == 200.0
+    assert profiles[0].points[-1].radius_m == 300.0
 
 
 def test_sectorial_generators_respect_angular_window() -> None:
@@ -91,6 +98,10 @@ def test_run_profile_analysis_orchestrates_both_generators() -> None:
                 "zone_id": str(uuid4()),
                 "pivot_kind": "circular",
                 "center": [-74.05, 4.61],
+                "spans": [
+                    {"position": 1, "length": 100, "dry_weight": 29, "service_weight": 45},
+                    {"position": 2, "length": 200, "dry_weight": 30, "service_weight": 40},
+                ],
                 "radii_m": [100.0, 200.0],
                 "transverse_spacing_m": 10.0,
                 "longitudinal_spacing_m": 50.0,

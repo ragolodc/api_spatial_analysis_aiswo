@@ -17,7 +17,7 @@ class GenerateLongitudinalProfiles:
     """Build longitudinal profiles (radial lines) for a pivot."""
 
     def execute(self, analysis_input: ProfileAnalysisInput) -> list[LongitudinalProfile]:
-        max_radius = max(analysis_input.radii_m)
+        max_radius = max(analysis_input.spans_config.get_radii_m())
         base_radii = iter_linear_space(
             0.0,
             max_radius,
@@ -27,7 +27,7 @@ class GenerateLongitudinalProfiles:
 
         radii = insert_anchors(
             base_radii,
-            list(analysis_input.radii_m),
+            list(analysis_input.spans_config.get_radii_m()),
             # analysis_input.longitudinal_spacing_m,
         )
 

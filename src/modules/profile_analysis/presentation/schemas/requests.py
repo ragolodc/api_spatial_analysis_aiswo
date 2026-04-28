@@ -3,12 +3,14 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from src.shared.domain.entities import Spans
+
 
 class ProfileAnalysisInputs(BaseModel):
     zone_id: UUID
     pivot_kind: Literal["circular", "sectorial"]
     center: list[float] = Field(min_length=2, max_length=2)
-    radii_m: list[float] = Field(min_length=1)
+    spans: list[Spans] = Field(min_length=1)
     transverse_spacing_m: float = Field(default=5.0, gt=0)
     longitudinal_spacing_m: float = Field(default=5.0, gt=0)
     angular_spacing_deg: float = Field(default=10.0, gt=0, le=180)

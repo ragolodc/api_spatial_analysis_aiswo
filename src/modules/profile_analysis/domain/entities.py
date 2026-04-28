@@ -4,6 +4,8 @@ from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
+from src.shared.domain.entities import SpansConfig
+
 
 class PivotKind(StrEnum):
     CIRCULAR = "circular"
@@ -38,6 +40,7 @@ class ProfileAnalysisInput:
     center_lon: float
     center_lat: float
     radii_m: tuple[float, ...]
+    spans_config: SpansConfig
     transverse_spacing_m: float
     longitudinal_spacing_m: float
     angular_spacing_deg: float

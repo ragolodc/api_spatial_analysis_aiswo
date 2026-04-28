@@ -24,14 +24,14 @@ class RunSlopeAnalysis:
     def __init__(
         self,
         profile_reader: ProfileReader,
-        crop_clearence_computator: ComputeCropClearance | None = None,
+        crop_clearance_computator: ComputeCropClearance | None = None,
         longitudinal_slope_computator: ComputeLongitudinalSlope | None = None,
         transverse_slope_computator: ComputeTransversalSlope | None = None,
         torsional_slope_computator: ComputeTorsionalSlope | None = None,
         structural_stress_computador: ComputeStructuralStress | None = None,
     ) -> None:
         self._profile_reader = profile_reader
-        self._crop_clearence_computator = crop_clearence_computator or ComputeCropClearance()
+        self._crop_clearance_computator = crop_clearance_computator or ComputeCropClearance()
         self._longitudinal_slope_computator = (
             longitudinal_slope_computator or ComputeLongitudinalSlope()
         )
@@ -77,13 +77,13 @@ class RunSlopeAnalysis:
             config=analysis_input.structural_stress_config,
         )
 
-        crop_clearence_analysis = self._crop_clearence_computator.execute(
+        crop_clearance_analysis = self._crop_clearance_computator.execute(
             request_id=request.request_id,
             profiles=longitudinal_profiles,
             radii_m=radii_m,
-            h_boom_m=analysis_input.crop_clearence_h_boom_meters,
-            crop_risk_m=analysis_input.crop_clearence_crop_risk_meters,
-            ground_risk_m=analysis_input.crop_clearence_ground_risk_meters,
+            h_boom_m=analysis_input.crop_clearance_h_boom_meters,
+            crop_risk_m=analysis_input.crop_clearance_crop_risk_meters,
+            ground_risk_m=analysis_input.crop_clearance_ground_risk_meters,
             structural=structural_stress_analysis,
         )
 
@@ -93,7 +93,7 @@ class RunSlopeAnalysis:
             transversal_slope_analysis=transversal_slope_analysis,
             torsional_slope_analysis=torsional_slope_analysis,
             structural_stress_analysis=structural_stress_analysis,
-            crop_clearence_analysis=crop_clearence_analysis,
+            crop_clearance_analysis=crop_clearance_analysis,
         )
 
     def _parse_input(self, request: SlopeAnalysisJobRequest) -> SlopeAnalysisInput:
@@ -111,11 +111,11 @@ class RunSlopeAnalysis:
 
         structural_stress_config = raw_input.get("structural_stress_config", ThresholdConfig(23))
 
-        crop_clearence_h_boom_meters = raw_input.get("crop_clearence_h_boom_meters", 2.90)
+        crop_clearance_h_boom_meters = raw_input.get("crop_clearance_h_boom_meters", 2.90)
 
-        crop_clearence_crop_risk_meters = raw_input.get("crop_clearence_crop_risk_meters", 2.0)
+        crop_clearance_crop_risk_meters = raw_input.get("crop_clearance_crop_risk_meters", 2.0)
 
-        crop_clearence_ground_risk_meters = raw_input.get("crop_clearence_ground_risk_meters", 1.0)
+        crop_clearance_ground_risk_meters = raw_input.get("crop_clearance_ground_risk_meters", 1.0)
 
         return SlopeAnalysisInput(
             longitudinal_slope_config=longitudinal_slope_config,
@@ -123,7 +123,7 @@ class RunSlopeAnalysis:
             torsional_config=torsional_config,
             torsional_longitudinal_config=torsional_longitudinal_config,
             structural_stress_config=structural_stress_config,
-            crop_clearence_h_boom_meters=crop_clearence_h_boom_meters,
-            crop_clearence_crop_risk_meters=crop_clearence_crop_risk_meters,
-            crop_clearence_ground_risk_meters=crop_clearence_ground_risk_meters,
+            crop_clearance_h_boom_meters=crop_clearance_h_boom_meters,
+            crop_clearance_crop_risk_meters=crop_clearance_crop_risk_meters,
+            crop_clearance_ground_risk_meters=crop_clearance_ground_risk_meters,
         )

@@ -183,9 +183,9 @@ class SlopeAnalysisInput:
     torsional_config: ThresholdConfig
     torsional_longitudinal_config: ThresholdConfig
     structural_stress_config: ThresholdConfig
-    crop_clearence_h_boom_meters: float
-    crop_clearence_crop_risk_meters: float
-    crop_clearence_ground_risk_meters: float
+    crop_clearance_h_boom_meters: float
+    crop_clearance_crop_risk_meters: float
+    crop_clearance_ground_risk_meters: float
 
 
 @dataclass(frozen=True)
@@ -203,4 +203,4 @@ class SlopeAnalysisResult:
     transversal_slope_analysis: TransversalSlopeAnalysis
     torsional_slope_analysis: TorsionalSlopeAnalysis
     structural_stress_analysis: StructuralStressAnalysis
-    crop_clearence_analysis: CropClearanceAnalysis
+    crop_clearance_analysis: CropClearanceAnalysis

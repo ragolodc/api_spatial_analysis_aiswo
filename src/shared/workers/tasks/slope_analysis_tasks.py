@@ -59,7 +59,7 @@ def generate_slope_analysis(
                 "transversal_slope_analysis": str(result.transversal_slope_analysis.request_id),
                 "torsional_slope_analysis": str(result.torsional_slope_analysis.request_id),
                 "structural_stress_analysis": str(result.structural_stress_analysis.request_id),
-                "crop_clearence_analysis": str(result.crop_clearence_analysis.request_id),
+                "crop_clearance_analysis": str(result.crop_clearance_analysis.request_id),
             }
             persist_job.mark_completed(UUID(request_id), result_payload=result_payload)
 
@@ -73,7 +73,7 @@ def generate_slope_analysis(
                     "transversal_slope_analysis": str(result.transversal_slope_analysis.request_id),
                     "torsional_slope_analysis": str(result.torsional_slope_analysis.request_id),
                     "structural_stress_analysis": str(result.structural_stress_analysis.request_id),
-                    "crop_clearence_analysis": str(result.crop_clearence_analysis.request_id),
+                    "crop_clearance_analysis": str(result.crop_clearance_analysis.request_id),
                 },
             )
         except Exception as exc:

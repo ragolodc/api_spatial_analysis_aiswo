@@ -17,7 +17,7 @@ class ComputeLongitudinalSlope:
         config: ThresholdConfig,
     ) -> LongitudinalSlopeAnalysis:
         spans = []
-        for profile in profiles:
+        for _, profile in enumerate(profiles):
             points_by_radius = {p.radius_m: p for p in profile.points}
             tower_radii = (0.0, *radii_m)
             for i in range(len(tower_radii) - 1):
@@ -29,7 +29,8 @@ class ComputeLongitudinalSlope:
 
                 if p_start is None or p_end is None:
                     raise ValueError(
-                        f"Missing point at radius {r_start} or {r_end} in profile {profile.azimuth_deg}º"
+                        f"Missing point at radius {r_start} or {r_end} in \
+                              profile {profile.azimuth_deg}º"
                     )
 
                 if p_start.elevation_m is None or p_end.elevation_m is None:
@@ -39,6 +40,7 @@ class ComputeLongitudinalSlope:
                 dx = p_end.radius_m - p_start.radius_m
 
                 slope = SlopeValue.from_ratio(dz=dz, dx=dx)
+
                 classification = config.classify(slope.pct)
 
                 spans.append(

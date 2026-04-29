@@ -10,6 +10,7 @@ from src.modules.profile_analysis.domain.entities import (
     TransverseProfile,
 )
 from src.modules.profile_analysis.infrastructure.persistence.models import ProfileAnalysisJobModel
+from src.shared.domain.entities import Spans, SpansConfig
 
 
 class ClickHouseProfileReader:
@@ -90,3 +91,10 @@ class ClickHouseProfileReader:
         if model is None:
             raise ValueError(f"ProfileAnalysisJob {request_id} not found")
         return tuple(sorted(float(r) for r in model.payload["inputs"]["radii_m"]))
+
+    def get_spans_configurations(self, request_id: UUID) -> SpansConfig:
+        model = self._db.get(ProfileAnalysisJobModel, request_id)
+        if model is None:
+            raise ValueError(f"ProfileAnalysisJob {request_id} not found")
+        spans = model.payload["inputs"]["spans"]
+        return SpansConfig(spans=[Spans(**span) for span in spans])

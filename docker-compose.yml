@@ -22,7 +22,7 @@ services:
      --host ${API_HOST}
      --port ${API_PORT}
      --reload
-     --log-level info
+     --log-level debug
 
   worker_profile:
     build: .
@@ -45,7 +45,7 @@ services:
       - .:/app
     command: >
      celery -A src.shared.workers.celery_app worker
-     --loglevel=INFO
+     --loglevel=DEBUG
      --queues=profile_analysis
      --concurrency=1
      --prefetch-multiplier=1
@@ -72,7 +72,7 @@ services:
       - .:/app
     command: >
       celery -A src.shared.workers.celery_app worker
-      --loglevel=INFO
+      --loglevel=DEBUG
       --queues=slope_analysis
       --concurrency=1
       --prefetch-multiplier=1

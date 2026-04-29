@@ -5,7 +5,11 @@ from src.modules.pivot_geometry_analysis.domain.entities import (
     SlopeAnalysisJob,
     SlopeAnalysisJobRequest,
 )
-from src.modules.profile_analysis.domain.entities import LongitudinalProfile, TransverseProfile
+from src.modules.profile_analysis.domain.entities import (
+    LongitudinalProfile,
+    SpansConfig,
+    TransverseProfile,
+)
 
 
 class ProfileReader(Protocol):
@@ -19,8 +23,8 @@ class ProfileReader(Protocol):
         """Return all sampled transversal profiles for *request_id*."""
         ...
 
-    def get_radii_m(self, request_id: UUID) -> tuple[float, ...]:
-        """Return the ordered tower radii (metres) from the original job payload."""
+    def get_spans_configurations(self, request_id: UUID) -> SpansConfig:
+        """Return the span configurations."""
         ...
 
 

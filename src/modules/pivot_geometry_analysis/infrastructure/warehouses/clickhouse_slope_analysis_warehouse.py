@@ -69,6 +69,7 @@ class ClickHouseSlopeAnalysisWarehouse:
                     span.radius_end_m,
                     span.slope.pct,
                     span.slope.deg,
+                    span.service_weight,
                     span.classification,
                 ]
             )
@@ -85,6 +86,7 @@ class ClickHouseSlopeAnalysisWarehouse:
                 "radius_end_m",
                 "slope_pct",
                 "slope_deg",
+                "service_weight",
                 "classification",
             ],
             data=rows,
@@ -203,6 +205,12 @@ class ClickHouseSlopeAnalysisWarehouse:
                     node.node_kind,
                     node.classification,
                     int(node.valley_double_check),
+                    node.left_force_kN,
+                    node.right_force_kN,
+                    node.internal_force_kN,
+                    node.force_type,
+                    node.safety_factor,
+                    int(node.is_critical),
                 ]
             )
 
@@ -237,6 +245,12 @@ class ClickHouseSlopeAnalysisWarehouse:
                 "node_kind",
                 "classification",
                 "valley_double_check",
+                "left_force_kN",
+                "right_force_kN",
+                "internal_force_kN",
+                "force_type",
+                "safety_factor",
+                "is_critical",
             ],
             data=rows_nodes_stress,
         )

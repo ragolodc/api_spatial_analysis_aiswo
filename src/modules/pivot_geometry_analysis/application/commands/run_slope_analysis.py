@@ -16,7 +16,11 @@ from src.modules.pivot_geometry_analysis.domain.entities import (
 )
 from src.modules.pivot_geometry_analysis.domain.ports import ProfileReader
 from src.modules.pivot_geometry_analysis.domain.value_objects import ThresholdConfig
-from src.modules.profile_analysis.domain.entities import LongitudinalProfile, TransverseProfile
+from src.modules.profile_analysis.domain.entities import (
+    LongitudinalProfile,
+    SpansConfig,
+    TransverseProfile,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +37,8 @@ class AnalysisConfig:
     crop_clearance_h_boom_meters: float = 2.90
     crop_clearance_crop_risk_meters: float = 2.0
     crop_clearance_ground_risk_meters: float = 1.0
+    max_tension_kN: float = 50.0
+    max_compression_kN: float = 30.0
 
     @classmethod
     def from_payload(cls, payload: Dict[str, Any]) -> "AnalysisConfig":
@@ -104,11 +110,9 @@ class RunSlopeAnalysis:
         """
         logger.info(f"Iniciando análisis para request_id={request.request_id}")
 
-        # Validar entrada básica
         if not request.payload:
             raise ValueError("Payload vacío o inválido")
 
-        # Cargar datos comunes (con logging)
         try:
             config = AnalysisConfig.from_payload(request.payload)
             logger.debug(f"Configuración cargada: {config}")
@@ -133,14 +137,31 @@ class RunSlopeAnalysis:
             logger.error(f"Error cargando datos: {e}", exc_info=True)
             raise ValueError(f"No se pudieron cargar los datos requeridos: {e}") from e
 
+        self._update_structural_stress_config(config)
         # Ejecutar análisis secuenciales
         analysis_results = self._run_analysis_chain(
             request=request,
             config=config,
             longitudinal_profiles=longitudinal_profiles,
             transversal_profiles=transversal_profiles,
+            spans_config=spans_config,
             radii_m=radii_m,
         )
+
+        structural_analysis = analysis_results.get("structural_stress_analysis")
+        if structural_analysis and hasattr(structural_analysis, "nodes"):
+            critical_nodes = [
+                n for n in structural_analysis.nodes if getattr(n, "is_critical", False)
+            ]
+            if critical_nodes:
+                logger.warning(
+                    f"Se encontraron {len(critical_nodes)} nodos críticos en el análisis estructural"
+                )
+                for node in critical_nodes:
+                    logger.warning(
+                        f"Nodo crítico: azimuth={node.azimuth_deg}, torre={node.tower_index}, "
+                        f"fuerza={node.axial_force_kN:.2f} kN, tipo={node.force_type}"
+                    )
 
         logger.info(f"Análisis completado exitosamente para request_id={request.request_id}")
 
@@ -152,6 +173,7 @@ class RunSlopeAnalysis:
         config: AnalysisConfig,
         longitudinal_profiles: list[LongitudinalProfile],
         transversal_profiles: list[TransverseProfile],
+        spans_config: SpansConfig,
         radii_m: list[float],
     ):
         """Ejecuta la cadena de análisis respetando dependencias"""
@@ -161,7 +183,7 @@ class RunSlopeAnalysis:
         longitudinal = self._longitudinal_slope.execute(
             request_id=request.request_id,
             profiles=longitudinal_profiles,
-            radii_m=radii_m,
+            spans_config=spans_config,
             config=thresholds["longitudinal"],
         )
 
@@ -217,3 +239,20 @@ class RunSlopeAnalysis:
             "structural_stress",
             "crop_clearance",
         ]
+
+    def _update_structural_stress_config(self, config: AnalysisConfig) -> None:
+        """
+        Actualiza la configuración de ComputeStructuralStress con parámetros de fuerza.
+
+        Args:
+            config: Configuración de análisis con parámetros de fuerzas
+        """
+        # Si el computador tiene atributos para configurar, los actualizamos
+        if hasattr(self._structural_stress, "_max_tension_kN"):
+            self._structural_stress._max_tension_kN = config.max_tension_kN
+            self._structural_stress._max_compression_kN = config.max_compression_kN
+            logger.debug(
+                f"Configuración estructural actualizada: "
+                f"max_tension={config.max_tension_kN} kN, "
+                f"max_compression={config.max_compression_kN} kN"
+            )

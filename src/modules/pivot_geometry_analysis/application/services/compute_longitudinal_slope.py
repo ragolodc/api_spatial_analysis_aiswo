@@ -5,7 +5,7 @@ from src.modules.pivot_geometry_analysis.domain.entities import (
     SpanSlopeResult,
 )
 from src.modules.pivot_geometry_analysis.domain.value_objects import SlopeValue, ThresholdConfig
-from src.modules.profile_analysis.domain.entities import LongitudinalProfile
+from src.modules.profile_analysis.domain.entities import LongitudinalProfile, SpansConfig
 
 
 class ComputeLongitudinalSlope:
@@ -13,16 +13,19 @@ class ComputeLongitudinalSlope:
         self,
         request_id: UUID,
         profiles: list[LongitudinalProfile],
-        radii_m: tuple[float, ...],
+        spans_config: SpansConfig,
         config: ThresholdConfig,
     ) -> LongitudinalSlopeAnalysis:
-        spans = []
+        spans: list[SpanSlopeResult] = []
         for _, profile in enumerate(profiles):
             points_by_radius = {p.radius_m: p for p in profile.points}
+            radii_m = spans_config.get_radii_m()
             tower_radii = (0.0, *radii_m)
             for i in range(len(tower_radii) - 1):
                 r_start = tower_radii[i]
                 r_end = tower_radii[i + 1]
+
+                span = spans_config.get_span_by_position(i + 1)
 
                 p_start = points_by_radius.get(r_start)
                 p_end = points_by_radius.get(r_end)
@@ -51,6 +54,7 @@ class ComputeLongitudinalSlope:
                         radius_end_m=r_end,
                         slope=slope,
                         classification=classification,
+                        service_weight=span.service_weight,
                     )
                 )
 

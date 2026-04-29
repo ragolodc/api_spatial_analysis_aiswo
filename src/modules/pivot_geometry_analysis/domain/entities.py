@@ -4,7 +4,10 @@ from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
-from src.modules.pivot_geometry_analysis.domain.value_objects import SlopeValue, ThresholdConfig
+from src.modules.pivot_geometry_analysis.domain.value_objects import (
+    SlopeValue,
+    ThresholdConfig,
+)
 
 # ---------------------------------------------------------------------------
 # Longitudinal Slope
@@ -21,6 +24,7 @@ class SpanSlopeResult:
     radius_end_m: float  # r of the outer tower
     slope: SlopeValue
     classification: str
+    service_weight: float
 
 
 @dataclass(frozen=True)
@@ -131,6 +135,12 @@ class NodeStressResult:
     node_kind: str  # NodeKind constant
     classification: str  # based on |delta| vs limit; valleys also checked vs 2×limit
     valley_double_check: bool  # True when valley and |delta| > 2 × longitudinal_limit
+    left_force_kN: float  # Fuerza en el lado izquierdo del nodo (kN),
+    right_force_kN: float  # Fuerza en el lado derecho del nodo (kN),
+    internal_force_kN: float  # Fuerza interna del nodo (kN),
+    force_type: str  # Tipo de fuerza (tensión o compresión)
+    safety_factor: float  # Factor de seguridad
+    is_critical: bool  # True si el nodo es crítico
 
 
 @dataclass(frozen=True)

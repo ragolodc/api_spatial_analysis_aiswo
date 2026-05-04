@@ -6,6 +6,7 @@ import clickhouse_connect.driver
 from src.modules.profile_analysis.domain.entities import (
     ProfileAnalysisAnalytics,
     ProfileAnalysisResult,
+    ProfilePointFilters,
     ProfilePointRow,
     ProfileSummaryEntry,
     ProfileType,
@@ -120,14 +121,32 @@ class ClickHouseProfilePointWarehouse:
         self,
         request_id: UUID,
         profile_type: ProfileType | None,
+        filters: ProfilePointFilters,
         limit: int,
         offset: int,
     ) -> list[ProfilePointRow]:
-        where = "WHERE request_id = %(request_id)s"
+        where_clauses = ["request_id = %(request_id)s"]
         params: dict = {"request_id": str(request_id)}
         if profile_type:
-            where += " AND profile_type = %(profile_type)s"
+            where_clauses.append("profile_type = %(profile_type)s")
             params["profile_type"] = profile_type
+        if filters.profile_key:
+            where_clauses.append("profile_key = %(profile_key)s")
+            params["profile_key"] = filters.profile_key
+        if filters.min_distance_m is not None:
+            where_clauses.append("distance_m >= %(min_distance_m)s")
+            params["min_distance_m"] = filters.min_distance_m
+        if filters.max_distance_m is not None:
+            where_clauses.append("distance_m <= %(max_distance_m)s")
+            params["max_distance_m"] = filters.max_distance_m
+        if filters.min_elevation_m is not None:
+            where_clauses.append("elevation_m >= %(min_elevation_m)s")
+            params["min_elevation_m"] = filters.min_elevation_m
+        if filters.max_elevation_m is not None:
+            where_clauses.append("elevation_m <= %(max_elevation_m)s")
+            params["max_elevation_m"] = filters.max_elevation_m
+
+        where = "WHERE " + " AND ".join(where_clauses)
 
         rows = self._client.query(
             f"""

@@ -6,6 +6,7 @@ from src.modules.profile_analysis.domain.entities import (
     ProfileAnalysisAnalytics,
     ProfileAnalysisJob,
     ProfileAnalysisJobStatus,
+    ProfilePointFilters,
     ProfilePointRow,
     ProfileSummaryEntry,
     ProfileType,
@@ -13,9 +14,11 @@ from src.modules.profile_analysis.domain.entities import (
 from src.modules.profile_analysis.infrastructure.factories import (
     get_get_profile_analysis_analytics,
     get_get_profile_analysis_job,
-    get_get_profile_analysis_points,
     get_get_profile_analysis_summary,
     get_queue_profile_analysis,
+)
+from src.modules.profile_analysis.presentation.processes_router import (
+    _resolve_get_profile_analysis_points_use_case,
 )
 
 _API_V1_PREFIX = "/api/v1"
@@ -113,7 +116,10 @@ def test_get_profile_analysis_points_returns_paginated_rows(client) -> None:
     request_id = uuid4()
 
     class _GetProfileAnalysisPoints:
-        def execute(self, request_id, profile_type, limit, offset):
+        def execute(self, request_id, profile_type, filters, limit, offset):
+            assert request_id is not None
+            assert profile_type is None
+            assert filters == ProfilePointFilters()
             return [
                 ProfilePointRow(
                     profile_type=ProfileType.TRANSVERSE,
@@ -128,7 +134,9 @@ def test_get_profile_analysis_points_returns_paginated_rows(client) -> None:
                 )
             ]
 
-    app.dependency_overrides[get_get_profile_analysis_points] = lambda: _GetProfileAnalysisPoints()
+    app.dependency_overrides[_resolve_get_profile_analysis_points_use_case] = lambda: (
+        lambda: _GetProfileAnalysisPoints()
+    )
 
     response = client.get(
         f"{_API_V1_PREFIX}/processes/profile-analysis/jobs/{request_id}/points?limit=10&offset=0"
@@ -143,18 +151,104 @@ def test_get_profile_analysis_points_returns_paginated_rows(client) -> None:
     assert data["items"][0]["elevation_m"] == 120.5
 
 
+def test_get_profile_analysis_points_applies_explicit_filters(client) -> None:
+    request_id = uuid4()
+
+    class _GetProfileAnalysisPoints:
+        def execute(self, request_id, profile_type, filters, limit, offset):
+            assert request_id is not None
+            assert profile_type == ProfileType.TRANSVERSE
+            assert filters == ProfilePointFilters(
+                profile_key="radius:100.0",
+                min_distance_m=50.0,
+                max_distance_m=150.0,
+                min_elevation_m=110.0,
+                max_elevation_m=130.0,
+            )
+            assert limit == 25
+            assert offset == 5
+            return []
+
+    app.dependency_overrides[_resolve_get_profile_analysis_points_use_case] = lambda: (
+        lambda: _GetProfileAnalysisPoints()
+    )
+
+    response = client.get(
+        f"{_API_V1_PREFIX}/processes/profile-analysis/jobs/{request_id}/points"
+        "?profile_type=transverse"
+        "&profile_key=radius:100.0"
+        "&min_distance_m=50"
+        "&max_distance_m=150"
+        "&min_elevation_m=110"
+        "&max_elevation_m=130"
+        "&limit=25"
+        "&offset=5"
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 0
+    assert data["limit"] == 25
+    assert data["offset"] == 5
+
+
 def test_get_profile_analysis_points_rejects_invalid_profile_type(client) -> None:
     class _Stub:
         def execute(self, *args, **kwargs):
             raise AssertionError("Should not be called")
 
-    app.dependency_overrides[get_get_profile_analysis_points] = lambda: _Stub()
+    app.dependency_overrides[_resolve_get_profile_analysis_points_use_case] = lambda: (
+        lambda: _Stub()
+    )
 
     request_id = uuid4()
     response = client.get(
         f"{_API_V1_PREFIX}/processes/profile-analysis/jobs/{request_id}/points?profile_type=invalid"
     )
     assert response.status_code == 422
+
+
+def test_get_profile_analysis_points_rejects_invalid_filter_range(client) -> None:
+    class _Stub:
+        def execute(self, *args, **kwargs):
+            raise AssertionError("Should not be called")
+
+    app.dependency_overrides[_resolve_get_profile_analysis_points_use_case] = lambda: (
+        lambda: _Stub()
+    )
+
+    request_id = uuid4()
+    response = client.get(
+        f"{_API_V1_PREFIX}/processes/profile-analysis/jobs/{request_id}/points"
+        "?min_distance_m=200&max_distance_m=100"
+    )
+
+    assert response.status_code == 422
+
+
+def test_get_profile_analysis_points_invalid_filters_do_not_resolve_use_case(
+    client, monkeypatch
+) -> None:
+    use_case_resolved = False
+
+    def _raise_if_resolved():
+        nonlocal use_case_resolved
+        use_case_resolved = True
+        raise AssertionError("Use case factory should not be resolved")
+
+    monkeypatch.setattr(
+        "src.modules.profile_analysis.presentation.processes_router.get_get_profile_analysis_points",
+        _raise_if_resolved,
+    )
+
+    request_id = uuid4()
+    response = client.get(
+        f"{_API_V1_PREFIX}/processes/profile-analysis/jobs/{request_id}/points"
+        "?min_distance_m=200&max_distance_m=100"
+    )
+
+    assert response.status_code == 422
+    assert use_case_resolved is False
 
 
 def test_get_profile_analysis_summary_returns_per_profile_stats(client) -> None:

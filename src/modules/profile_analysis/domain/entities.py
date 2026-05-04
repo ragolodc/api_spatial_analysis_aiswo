@@ -103,6 +103,15 @@ class ProfilePointRow:
 
 
 @dataclass(frozen=True)
+class ProfilePointFilters:
+    profile_key: str | None = None
+    min_distance_m: float | None = None
+    max_distance_m: float | None = None
+    min_elevation_m: float | None = None
+    max_elevation_m: float | None = None
+
+
+@dataclass(frozen=True)
 class ProfileSummaryEntry:
     profile_type: ProfileType
     profile_key: str

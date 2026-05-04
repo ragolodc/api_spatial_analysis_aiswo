@@ -1,8 +1,15 @@
+from collections.abc import Callable
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import ValidationError
 
-from src.modules.profile_analysis.domain.entities import ProfileAnalysisJob, ProfileType
+from src.modules.profile_analysis.application import GetProfileAnalysisPoints
+from src.modules.profile_analysis.domain.entities import (
+    ProfileAnalysisJob,
+    ProfilePointFilters,
+    ProfileType,
+)
 from src.modules.profile_analysis.infrastructure.factories import (
     get_get_profile_analysis_analytics,
     get_get_profile_analysis_job,
@@ -14,6 +21,7 @@ from src.modules.profile_analysis.presentation.schemas import (
     ProfileAnalysisAnalyticsResponse,
     ProfileAnalysisJobAccepted,
     ProfileAnalysisJobResponse,
+    ProfileAnalysisPointFiltersQuery,
     ProfilePointRowResponse,
     ProfilePointsResponse,
     ProfileSummaryEntryResponse,
@@ -27,6 +35,29 @@ _POINTS_MIN_LIMIT = 1
 _POINTS_MAX_LIMIT = 10_000
 
 router = APIRouter()
+
+
+def _resolve_profile_analysis_point_filters(
+    profile_key: str | None = Query(default=None),
+    min_distance_m: float | None = Query(default=None, ge=0),
+    max_distance_m: float | None = Query(default=None, ge=0),
+    min_elevation_m: float | None = Query(default=None),
+    max_elevation_m: float | None = Query(default=None),
+) -> ProfileAnalysisPointFiltersQuery:
+    try:
+        return ProfileAnalysisPointFiltersQuery(
+            profile_key=profile_key,
+            min_distance_m=min_distance_m,
+            max_distance_m=max_distance_m,
+            min_elevation_m=min_elevation_m,
+            max_elevation_m=max_elevation_m,
+        )
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=exc.errors()) from exc
+
+
+def _resolve_get_profile_analysis_points_use_case() -> Callable[[], GetProfileAnalysisPoints]:
+    return get_get_profile_analysis_points
 
 
 def _to_job_response(job: ProfileAnalysisJob) -> ProfileAnalysisJobResponse:
@@ -121,14 +152,25 @@ def get_profile_analysis_analytics(
 )
 def get_profile_analysis_points(
     request_id: UUID,
-    use_case=Depends(get_get_profile_analysis_points),
+    use_case_factory: Callable[[], GetProfileAnalysisPoints] = Depends(
+        _resolve_get_profile_analysis_points_use_case
+    ),
+    filters: ProfileAnalysisPointFiltersQuery = Depends(_resolve_profile_analysis_point_filters),
     profile_type: ProfileType | None = None,
     limit: int = Query(default=1000, ge=_POINTS_MIN_LIMIT, le=_POINTS_MAX_LIMIT),
     offset: int = Query(default=0, ge=0),
 ) -> ProfilePointsResponse:
+    use_case: GetProfileAnalysisPoints = use_case_factory()
     rows = use_case.execute(
         request_id=request_id,
         profile_type=profile_type,
+        filters=ProfilePointFilters(
+            profile_key=filters.profile_key,
+            min_distance_m=filters.min_distance_m,
+            max_distance_m=filters.max_distance_m,
+            min_elevation_m=filters.min_elevation_m,
+            max_elevation_m=filters.max_elevation_m,
+        ),
         limit=limit,
         offset=offset,
     )

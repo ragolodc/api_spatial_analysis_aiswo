@@ -1,5 +1,6 @@
 from src.modules.profile_analysis.presentation.schemas.requests import (
     ProfileAnalysisInputs,
+    ProfileAnalysisPointFiltersQuery,
     QueueProfileAnalysisRequest,
 )
 from src.modules.profile_analysis.presentation.schemas.responses import (
@@ -14,6 +15,7 @@ from src.modules.profile_analysis.presentation.schemas.responses import (
 
 __all__ = [
     "ProfileAnalysisInputs",
+    "ProfileAnalysisPointFiltersQuery",
     "QueueProfileAnalysisRequest",
     "ProfileAnalysisJobAccepted",
     "ProfileAnalysisJobResponse",

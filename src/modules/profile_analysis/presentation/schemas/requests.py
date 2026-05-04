@@ -28,3 +28,27 @@ class ProfileAnalysisInputs(BaseModel):
 
 class QueueProfileAnalysisRequest(BaseModel):
     inputs: ProfileAnalysisInputs
+
+
+class ProfileAnalysisPointFiltersQuery(BaseModel):
+    profile_key: str | None = None
+    min_distance_m: float | None = Field(default=None, ge=0)
+    max_distance_m: float | None = Field(default=None, ge=0)
+    min_elevation_m: float | None = None
+    max_elevation_m: float | None = None
+
+    @model_validator(mode="after")
+    def validate_ranges(self) -> Self:
+        if (
+            self.min_distance_m is not None
+            and self.max_distance_m is not None
+            and self.min_distance_m > self.max_distance_m
+        ):
+            raise ValueError("min_distance_m cannot be greater than max_distance_m")
+        if (
+            self.min_elevation_m is not None
+            and self.max_elevation_m is not None
+            and self.min_elevation_m > self.max_elevation_m
+        ):
+            raise ValueError("min_elevation_m cannot be greater than max_elevation_m")
+        return self

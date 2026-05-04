@@ -6,6 +6,7 @@ from src.modules.profile_analysis.domain.entities import (
     ProfileAnalysisJob,
     ProfileAnalysisJobRequest,
     ProfileAnalysisResult,
+    ProfilePointFilters,
     ProfilePointRow,
     ProfileSamplePoint,
     ProfileSummaryEntry,
@@ -45,6 +46,7 @@ class ProfileAnalysisPointWarehouse(Protocol):
         self,
         request_id: UUID,
         profile_type: ProfileType | None,
+        filters: ProfilePointFilters,
         limit: int,
         offset: int,
     ) -> list[ProfilePointRow]: ...

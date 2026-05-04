@@ -21,6 +21,9 @@ class SlopeValue:
         deg = math.degrees(math.atan(dz / dx))
         return SlopeValue(pct=pct, deg=deg)
 
+    def to_dict(self) -> dict[str, float]:
+        return {"pct": float(self.pct), "deg": float(self.deg)}
+
 
 @dataclass(frozen=True)
 class ThresholdCategory:

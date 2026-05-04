@@ -1,10 +1,15 @@
 import clickhouse_connect
+from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from src.modules.pivot_geometry_analysis.application.commands import (
     PersistSlopeAnalysisJob,
     QueueSlopeAnalysis,
     RunSlopeAnalysis,
+)
+from src.modules.pivot_geometry_analysis.application.queries import (
+    GetSlopeAnalysisJob,
+    GetSlopeAnalysisResults,
 )
 from src.modules.pivot_geometry_analysis.infrastructure.adapters.clickhouse_profile_reader import (
     ClickHouseProfileReader,
@@ -19,6 +24,7 @@ from src.modules.pivot_geometry_analysis.infrastructure.warehouses.clickhouse_sl
     ClickHouseSlopeAnalysisWarehouse,
 )
 from src.shared.config import settings
+from src.shared.db.session import get_db
 
 
 def get_slope_analysis_job_repository(db: Session) -> SQLAlchemySlopeAnalysisJobRepository:
@@ -53,7 +59,15 @@ def get_run_slope_analysis(db: Session) -> RunSlopeAnalysis:
     return RunSlopeAnalysis(profile_reader=get_profile_reader(db))
 
 
-def get_queue_slope_analysis(db: Session) -> QueueSlopeAnalysis:
+def get_queue_slope_analysis(db: Session = Depends(get_db)) -> QueueSlopeAnalysis:
     return QueueSlopeAnalysis(
         dispatcher=CelerySlopeAnalysisDispatcher(), persist_job=get_persist_slope_analysis_job(db)
     )
+
+
+def get_get_slope_analysis_job(db: Session = Depends(get_db)) -> GetSlopeAnalysisJob:
+    return GetSlopeAnalysisJob(repository=get_slope_analysis_job_repository(db))
+
+
+def get_get_slope_analysis_results(db: Session = Depends(get_db)) -> GetSlopeAnalysisResults:
+    return GetSlopeAnalysisResults(repository=get_slope_analysis_job_repository(db))

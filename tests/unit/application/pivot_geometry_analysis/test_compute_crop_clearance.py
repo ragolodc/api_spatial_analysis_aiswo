@@ -56,6 +56,12 @@ def _structural_with_valley(azimuth: float, tower_index: int) -> StructuralStres
         node_kind=NodeKind.VALLEY,
         classification="ok",
         valley_double_check=False,
+        left_force_kN=0.0,
+        right_force_kN=0.0,
+        internal_force_kN=0.0,
+        force_type="neutral",
+        safety_factor=float("inf"),
+        is_critical=False,
     )
     return StructuralStressAnalysis(request_id=uuid4(), nodes=[node], runs=[])
 

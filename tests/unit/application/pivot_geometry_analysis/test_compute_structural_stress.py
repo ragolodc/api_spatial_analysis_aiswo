@@ -33,6 +33,7 @@ def _longitudinal(azimuth: float, slopes: list[float]) -> LongitudinalSlopeAnaly
                 radius_end_m=radii[i + 1],
                 slope=_slope(pct),
                 classification="ok",
+                service_weight=100.0,
             )
             for i, pct in enumerate(slopes)
         ],
@@ -45,23 +46,23 @@ def _longitudinal(azimuth: float, slopes: list[float]) -> LongitudinalSlopeAnaly
 
 
 def test_node_count():
-    long = _longitudinal(0.0, [2.0, 3.0, 4.0])  # 3 spans → 2 nodes
+    long = _longitudinal(0.0, [2.0, 3.0, 4.0])  # 3 spans → 4 nodes (pivote + 3 torres)
     result = SVC.execute(uuid4(), long, CONFIG)
-    assert len(result.nodes) == 2
+    assert len(result.nodes) == 4
 
 
 def test_valley_node():
-    # span_in descends (-2 %) then span_out ascends (+3 %) → valley
+    # span_in descends (-2 %) then span_out ascends (+3 %) → valley at inner node
     long = _longitudinal(0.0, [-2.0, 3.0])
     result = SVC.execute(uuid4(), long, CONFIG)
-    assert result.nodes[0].node_kind == NodeKind.VALLEY
+    assert result.nodes[1].node_kind == NodeKind.VALLEY
 
 
 def test_crest_node():
-    # span_in ascends (+3 %) then span_out descends (-2 %) → crest
+    # span_in ascends (+3 %) then span_out descends (-2 %) → crest at inner node
     long = _longitudinal(0.0, [3.0, -2.0])
     result = SVC.execute(uuid4(), long, CONFIG)
-    assert result.nodes[0].node_kind == NodeKind.CREST
+    assert result.nodes[1].node_kind == NodeKind.CREST
 
 
 def test_neutral_node():
@@ -71,31 +72,31 @@ def test_neutral_node():
 
 
 def test_delta_calculation():
-    # delta = slope_out - slope_in = 5 - (-3) = 8 %
+    # delta = slope_out - slope_in = 5 - (-3) = 8 % at inner node
     long = _longitudinal(0.0, [-3.0, 5.0])
     result = SVC.execute(uuid4(), long, CONFIG)
-    assert result.nodes[0].delta.pct == pytest.approx(8.0)
+    assert result.nodes[1].delta.pct == pytest.approx(8.0)
 
 
 def test_valley_double_check_triggered():
-    # delta = 20 % > 2 × 8 % = 16 % → valley_double_check True
+    # delta = 20 % > 2 × 8 % = 16 % → valley_double_check True at inner node
     long = _longitudinal(0.0, [-10.0, 10.0])
     result = SVC.execute(uuid4(), long, CONFIG)
-    assert result.nodes[0].valley_double_check is True
+    assert result.nodes[1].valley_double_check is True
 
 
 def test_valley_double_check_not_triggered():
-    # delta = 6 % < 16 %
+    # delta = 6 % < 16 % at inner node
     long = _longitudinal(0.0, [-2.0, 4.0])
     result = SVC.execute(uuid4(), long, CONFIG)
-    assert result.nodes[0].valley_double_check is False
+    assert result.nodes[1].valley_double_check is False
 
 
 def test_node_classification_violation():
-    # delta = 20 % > max(8 %)
+    # delta = 20 % > max(8 %) at inner node
     long = _longitudinal(0.0, [-10.0, 10.0])
     result = SVC.execute(uuid4(), long, CONFIG)
-    assert result.nodes[0].classification == "violation"
+    assert result.nodes[1].classification == "violation"
 
 
 # ---------------------------------------------------------------------------

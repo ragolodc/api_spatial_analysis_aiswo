@@ -1,7 +1,6 @@
 import logging
 from dataclasses import dataclass
-from functools import lru_cache
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from src.modules.pivot_geometry_analysis.application.services import (
     ComputeCropClearance,
@@ -40,23 +39,7 @@ class AnalysisConfig:
     max_tension_kN: float = 50.0
     max_compression_kN: float = 30.0
 
-    @classmethod
-    def from_payload(cls, payload: Dict[str, Any]) -> "AnalysisConfig":
-        """Extrae configuración del payload con valores por defecto"""
-        inputs = payload.get("inputs", payload)
-
-        # Valores por defecto definidos en la dataclass
-        defaults = {f.name: f.default for f in cls.__dataclass_fields__.values()}
-
-        # Extraer y limpiar valores
-        config_dict = {}
-        for field_name, default_value in defaults.items():
-            value = inputs.get(field_name, default_value)
-            config_dict[field_name] = default_value if value is None else value
-
-        return cls(**config_dict)
-
-    def to_threshold_configs(self) -> Dict[str, ThresholdConfig]:
+    def to_threshold_configs(self) -> dict[str, ThresholdConfig]:
         """Convierte a objetos ThresholdConfig"""
         return {
             "longitudinal": ThresholdConfig(self.longitudinal_slope_max_threshold),
@@ -65,6 +48,16 @@ class AnalysisConfig:
             "torsional_longitudinal": ThresholdConfig(self.torsional_longitudinal_max_threshold),
             "structural_stress": ThresholdConfig(self.structural_stress_max_threshold),
         }
+
+
+def _parse_analysis_config(payload: dict[str, Any]) -> AnalysisConfig:
+    inputs = payload.get("inputs", payload)
+    defaults = {f.name: f.default for f in AnalysisConfig.__dataclass_fields__.values()}
+    config_dict = {}
+    for field_name, default_value in defaults.items():
+        value = inputs.get(field_name, default_value)
+        config_dict[field_name] = default_value if value is None else value
+    return AnalysisConfig(**config_dict)
 
 
 class RunSlopeAnalysis:
@@ -92,7 +85,6 @@ class RunSlopeAnalysis:
         self._transverse_slope = transverse_slope_computator or ComputeTransversalSlope()
         self._torsional_slope = torsional_slope_computator or ComputeTorsionalSlope()
         self._structural_stress = structural_stress_computator or ComputeStructuralStress()
-        self._analysis_chain = self._build_analysis_chain()
 
     def execute(self, request: SlopeAnalysisJobRequest) -> SlopeAnalysisResult:
         """
@@ -114,7 +106,7 @@ class RunSlopeAnalysis:
             raise ValueError("Payload vacío o inválido")
 
         try:
-            config = AnalysisConfig.from_payload(request.payload)
+            config = _parse_analysis_config(request.payload)
             logger.debug(f"Configuración cargada: {config}")
 
             longitudinal_profiles = self._profile_reader.get_longitudinal_profiles(
@@ -137,8 +129,6 @@ class RunSlopeAnalysis:
             logger.error(f"Error cargando datos: {e}", exc_info=True)
             raise ValueError(f"No se pudieron cargar los datos requeridos: {e}") from e
 
-        self._update_structural_stress_config(config)
-        # Ejecutar análisis secuenciales
         analysis_results = self._run_analysis_chain(
             request=request,
             config=config,
@@ -179,7 +169,6 @@ class RunSlopeAnalysis:
         """Ejecuta la cadena de análisis respetando dependencias"""
         thresholds = config.to_threshold_configs()
 
-        # Análisis 1: Pendiente longitudinal
         longitudinal = self._longitudinal_slope.execute(
             request_id=request.request_id,
             profiles=longitudinal_profiles,
@@ -187,14 +176,13 @@ class RunSlopeAnalysis:
             config=thresholds["longitudinal"],
         )
 
-        # Análisis 2: Pendiente transversal
         transversal = self._transverse_slope.execute(
             request_id=request.request_id,
             profiles=transversal_profiles,
             config=thresholds["transversal"],
         )
 
-        # Análisis 3: Pendiente torsional (depende de 1 y 2)
+        # Torsional depende de longitudinal Y transversal; debe ejecutarse después de ambos.
         torsional = self._torsional_slope.execute(
             request_id=request.request_id,
             longitudinal=longitudinal,
@@ -203,14 +191,16 @@ class RunSlopeAnalysis:
             longitudinal_config=thresholds["torsional_longitudinal"],
         )
 
-        # Análisis 4: Estrés estructural (depende de 1)
+        # Estrés estructural depende de longitudinal y recibe la config de fuerzas del request.
         structural = self._structural_stress.execute(
             request_id=request.request_id,
             longitudinal=longitudinal,
             config=thresholds["structural_stress"],
+            max_tension_kN=config.max_tension_kN,
+            max_compression_kN=config.max_compression_kN,
         )
 
-        # Análisis 5: Clearance de cultivo (depende de 4)
+        # Clearance de cultivo depende del análisis estructural (necesita nodos valle).
         crop_clearance = self._crop_clearance.execute(
             request_id=request.request_id,
             profiles=longitudinal_profiles,
@@ -228,31 +218,3 @@ class RunSlopeAnalysis:
             "structural_stress_analysis": structural,
             "crop_clearance_analysis": crop_clearance,
         }
-
-    @lru_cache(maxsize=1)
-    def _build_analysis_chain(self) -> list:
-        """Define el orden de ejecución de análisis (para posible inyección de dependencias)"""
-        return [
-            "longitudinal",
-            "transversal",
-            "torsional",
-            "structural_stress",
-            "crop_clearance",
-        ]
-
-    def _update_structural_stress_config(self, config: AnalysisConfig) -> None:
-        """
-        Actualiza la configuración de ComputeStructuralStress con parámetros de fuerza.
-
-        Args:
-            config: Configuración de análisis con parámetros de fuerzas
-        """
-        # Si el computador tiene atributos para configurar, los actualizamos
-        if hasattr(self._structural_stress, "_max_tension_kN"):
-            self._structural_stress._max_tension_kN = config.max_tension_kN
-            self._structural_stress._max_compression_kN = config.max_compression_kN
-            logger.debug(
-                f"Configuración estructural actualizada: "
-                f"max_tension={config.max_tension_kN} kN, "
-                f"max_compression={config.max_compression_kN} kN"
-            )

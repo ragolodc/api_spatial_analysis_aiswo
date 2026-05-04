@@ -13,3 +13,5 @@ alembic/versions/*.pyc
 
 db_data/
 storage/
+.github/
+agents_house/

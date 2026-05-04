@@ -36,6 +36,7 @@ def _longitudinal(
                 radius_end_m=r_end,
                 slope=_slope(pct),
                 classification="ok",
+                service_weight=0.0,
             )
             for idx, r_start, r_end, pct in spans
         ],

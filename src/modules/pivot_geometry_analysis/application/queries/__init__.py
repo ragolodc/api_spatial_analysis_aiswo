@@ -1,3 +1,6 @@
+from src.modules.pivot_geometry_analysis.application.queries.compute_slope_analysis import (
+    ComputeSlopeAnalysis,
+)
 from src.modules.pivot_geometry_analysis.application.queries.get_slope_analysis_job import (
     GetSlopeAnalysisJob,
 )
@@ -6,6 +9,7 @@ from src.modules.pivot_geometry_analysis.application.queries.get_slope_analysis_
 )
 
 __all__ = [
+    "ComputeSlopeAnalysis",
     "GetSlopeAnalysisJob",
     "GetSlopeAnalysisResults",
 ]

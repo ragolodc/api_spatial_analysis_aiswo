@@ -8,6 +8,7 @@ from src.modules.pivot_geometry_analysis.application.commands import (
     RunSlopeAnalysis,
 )
 from src.modules.pivot_geometry_analysis.application.queries import (
+    ComputeSlopeAnalysis,
     GetSlopeAnalysisJob,
     GetSlopeAnalysisResults,
 )
@@ -74,3 +75,7 @@ def get_get_slope_analysis_results(db: Session = Depends(get_db)) -> GetSlopeAna
         repository=get_slope_analysis_job_repository(db),
         result_reader=get_slope_analysis_warehouse(),
     )
+
+
+def get_compute_slope_analysis(db: Session = Depends(get_db)) -> ComputeSlopeAnalysis:
+    return ComputeSlopeAnalysis(profile_reader=get_profile_reader(db))

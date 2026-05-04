@@ -2,6 +2,7 @@ from itertools import groupby
 from uuid import UUID
 
 import clickhouse_connect.driver
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from src.modules.profile_analysis.domain.entities import (
@@ -9,7 +10,6 @@ from src.modules.profile_analysis.domain.entities import (
     ProfileSamplePoint,
     TransverseProfile,
 )
-from src.modules.profile_analysis.infrastructure.persistence.models import ProfileAnalysisJobModel
 from src.shared.domain.entities import Spans, SpansConfig
 
 
@@ -86,15 +86,19 @@ class ClickHouseProfileReader:
             profiles.append(TransverseProfile(radius_m=radius_m, points=points))
         return profiles
 
-    def get_radii_m(self, request_id: UUID) -> tuple[float, ...]:
-        model = self._db.get(ProfileAnalysisJobModel, request_id)
-        if model is None:
-            raise ValueError(f"ProfileAnalysisJob {request_id} not found")
-        return tuple(sorted(float(r) for r in model.payload["inputs"]["radii_m"]))
-
     def get_spans_configurations(self, request_id: UUID) -> SpansConfig:
-        model = self._db.get(ProfileAnalysisJobModel, request_id)
-        if model is None:
+        payload = self._db.execute(
+            text(
+                """
+                SELECT payload
+                FROM profile_analysis_jobs
+                WHERE request_id = :request_id
+                """
+            ),
+            {"request_id": request_id},
+        ).scalar_one_or_none()
+        if payload is None:
             raise ValueError(f"ProfileAnalysisJob {request_id} not found")
-        spans = model.payload["inputs"]["spans"]
+
+        spans = payload["inputs"]["spans"]
         return SpansConfig(spans=[Spans(**span) for span in spans])

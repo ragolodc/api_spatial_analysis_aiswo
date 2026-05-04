@@ -70,4 +70,7 @@ def get_get_slope_analysis_job(db: Session = Depends(get_db)) -> GetSlopeAnalysi
 
 
 def get_get_slope_analysis_results(db: Session = Depends(get_db)) -> GetSlopeAnalysisResults:
-    return GetSlopeAnalysisResults(repository=get_slope_analysis_job_repository(db))
+    return GetSlopeAnalysisResults(
+        repository=get_slope_analysis_job_repository(db),
+        result_reader=get_slope_analysis_warehouse(),
+    )

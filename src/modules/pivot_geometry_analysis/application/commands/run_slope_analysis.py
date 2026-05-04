@@ -150,7 +150,7 @@ class RunSlopeAnalysis:
                 for node in critical_nodes:
                     logger.warning(
                         f"Nodo crítico: azimuth={node.azimuth_deg}, torre={node.tower_index}, "
-                        f"fuerza={node.axial_force_kN:.2f} kN, tipo={node.force_type}"
+                        f"fuerza={node.internal_force_kN:.2f} kN, tipo={node.force_type}"
                     )
 
         logger.info(f"Análisis completado exitosamente para request_id={request.request_id}")

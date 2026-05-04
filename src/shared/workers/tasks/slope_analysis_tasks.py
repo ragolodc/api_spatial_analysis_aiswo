@@ -55,16 +55,20 @@ def generate_slope_analysis(
 
             result_payload = {
                 "request_id": str(result.request_id),
-                "longitudinal_slope_analysis": str(result.longitudinal_slope_analysis.request_id),
-                "transversal_slope_analysis": str(result.transversal_slope_analysis.request_id),
-                "torsional_slope_analysis": str(result.torsional_slope_analysis.request_id),
-                "structural_stress_analysis": str(result.structural_stress_analysis.request_id),
-                "crop_clearance_analysis": str(result.crop_clearance_analysis.request_id),
+                "zone_id": str(zone_id),
+                "profile_analysis_id": str(profile_analysis_id),
+                "longitudinal_spans": len(result.longitudinal_slope_analysis.spans),
+                "transversal_points": len(result.transversal_slope_analysis.points),
+                "torsional_spans": len(result.torsional_slope_analysis.spans),
+                "structural_nodes": len(result.structural_stress_analysis.nodes),
+                "structural_runs": len(result.structural_stress_analysis.runs),
+                "crop_clearance_points": len(result.crop_clearance_analysis.points),
+                "analytics_available": True,
             }
             persist_job.mark_completed(UUID(request_id), result_payload=result_payload)
 
             logger.info(
-                "Profile analysis job completed",
+                "Slope analysis job completed",
                 extra={
                     "request_id": str(result.request_id),
                     "longitudinal_slope_analysis": str(

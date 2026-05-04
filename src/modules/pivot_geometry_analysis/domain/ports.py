@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import Any, Protocol
 from uuid import UUID
 
 from src.modules.pivot_geometry_analysis.domain.entities import (
@@ -40,3 +40,15 @@ class SlopeAnalysisJobDispatcher(Protocol):
     """Hexagonal outbound port to enqueue async slope-analysis jobs."""
 
     def dispatch(self, request: SlopeAnalysisJobRequest) -> None: ...
+
+
+class SlopeAnalysisResultReader(Protocol):
+    """Read normalized slope-analysis results from analytical storage."""
+
+    def get_result_payload(self, request_id: UUID) -> dict[str, Any] | None: ...
+
+
+class SlopeAnalysisResultWriter(Protocol):
+    """Persist normalized slope-analysis results into analytical storage."""
+
+    def store_result(self, analysis, job_request: SlopeAnalysisJobRequest) -> None: ...

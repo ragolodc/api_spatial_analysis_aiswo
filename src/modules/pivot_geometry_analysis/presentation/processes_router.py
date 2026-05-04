@@ -1,3 +1,4 @@
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -23,6 +24,64 @@ from src.shared.config import settings
 router = APIRouter()
 
 
+def _count_nested_items(payload: dict[str, Any], key: str, item_key: str) -> int | None:
+    section = payload.get(key)
+    if not isinstance(section, dict):
+        return None
+    items = section.get(item_key)
+    if not isinstance(items, list):
+        return None
+    return len(items)
+
+
+def _to_job_summary_payload(job) -> dict[str, Any] | None:
+    payload = job.result_payload
+    if payload is None:
+        return None
+
+    if {
+        "longitudinal_spans",
+        "transversal_points",
+        "torsional_spans",
+        "structural_nodes",
+        "structural_runs",
+        "crop_clearance_points",
+    }.issubset(payload.keys()):
+        # Already summarized payload (new contract)
+        return payload
+
+    # Legacy payloads are normalized to summary to keep /jobs/{id} consistent.
+    longitudinal_spans = _count_nested_items(payload, "longitudinal_slope_analysis", "spans")
+    transversal_points = _count_nested_items(payload, "transversal_slope_analysis", "points")
+    torsional_spans = _count_nested_items(payload, "torsional_slope_analysis", "spans")
+    structural_nodes = _count_nested_items(payload, "structural_stress_analysis", "nodes")
+    structural_runs = _count_nested_items(payload, "structural_stress_analysis", "runs")
+    crop_clearance_points = _count_nested_items(payload, "crop_clearance_analysis", "points")
+
+    return {
+        "request_id": str(job.request_id),
+        "zone_id": str(job.zone_id),
+        "profile_analysis_id": str(job.profile_analysis_id),
+        "longitudinal_spans": longitudinal_spans,
+        "transversal_points": transversal_points,
+        "torsional_spans": torsional_spans,
+        "structural_nodes": structural_nodes,
+        "structural_runs": structural_runs,
+        "crop_clearance_points": crop_clearance_points,
+        "analytics_available": any(
+            v is not None
+            for v in [
+                longitudinal_spans,
+                transversal_points,
+                torsional_spans,
+                structural_nodes,
+                structural_runs,
+                crop_clearance_points,
+            ]
+        ),
+    }
+
+
 def _to_job_response(job) -> SlopeAnalysisJobResponse:
     """Convert SlopeAnalysisJob entity to response schema."""
     return SlopeAnalysisJobResponse(
@@ -33,7 +92,7 @@ def _to_job_response(job) -> SlopeAnalysisJobResponse:
         queued_at=job.queued_at.isoformat(),
         started_at=job.started_at.isoformat() if job.started_at else None,
         completed_at=job.completed_at.isoformat() if job.completed_at else None,
-        result_payload=job.result_payload,
+        result_payload=_to_job_summary_payload(job),
     )
 
 

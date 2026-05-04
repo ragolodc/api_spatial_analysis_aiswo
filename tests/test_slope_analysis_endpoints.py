@@ -71,11 +71,16 @@ def test_get_slope_analysis_job_returns_job_status(client) -> None:
                 status=SlopeAnalysisJobStatus.COMPLETED,
                 payload={"test": "data"},
                 result_payload={
-                    "longitudinal_slope_analysis": {"spans": []},
-                    "transversal_slope_analysis": {"points": []},
-                    "torsional_slope_analysis": {"spans": []},
-                    "structural_stress_analysis": {"nodes": [], "runs": []},
-                    "crop_clearance_analysis": {"points": []},
+                    "request_id": str(request_id),
+                    "zone_id": str(zone_id),
+                    "profile_analysis_id": str(profile_analysis_id),
+                    "longitudinal_spans": 12,
+                    "transversal_points": 120,
+                    "torsional_spans": 12,
+                    "structural_nodes": 11,
+                    "structural_runs": 3,
+                    "crop_clearance_points": 250,
+                    "analytics_available": True,
                 },
                 error_message=None,
                 queued_at=datetime.now(timezone.utc),
@@ -92,6 +97,8 @@ def test_get_slope_analysis_job_returns_job_status(client) -> None:
     assert data["status"] == "completed"
     assert data["zone_id"] == str(zone_id)
     assert data["result_payload"] is not None
+    assert data["result_payload"]["analytics_available"] is True
+    assert "longitudinal_slope_analysis" not in data["result_payload"]
 
 
 def test_get_slope_analysis_job_not_found(client) -> None:
@@ -106,6 +113,67 @@ def test_get_slope_analysis_job_not_found(client) -> None:
     response = client.get(f"{_API_V1_PREFIX}/processes/slope-analysis/jobs/{uuid4()}")
 
     assert response.status_code == 404
+
+
+def test_get_slope_analysis_job_normalizes_legacy_detailed_payload(client) -> None:
+    """Legacy jobs with detailed payload are normalized to summary in /jobs/{id}."""
+    request_id = uuid4()
+    zone_id = uuid4()
+    profile_analysis_id = uuid4()
+
+    class _GetSlopeAnalysisJob:
+        def execute(self, req_id):
+            assert req_id == request_id
+            return SlopeAnalysisJob(
+                request_id=request_id,
+                zone_id=zone_id,
+                profile_analysis_id=profile_analysis_id,
+                status=SlopeAnalysisJobStatus.COMPLETED,
+                payload={"test": "data"},
+                result_payload={
+                    "request_id": str(request_id),
+                    "longitudinal_slope_analysis": {
+                        "request_id": str(request_id),
+                        "spans": [{}, {}, {}],
+                    },
+                    "transversal_slope_analysis": {
+                        "request_id": str(request_id),
+                        "points": [{}, {}],
+                    },
+                    "torsional_slope_analysis": {
+                        "request_id": str(request_id),
+                        "spans": [{}],
+                    },
+                    "structural_stress_analysis": {
+                        "request_id": str(request_id),
+                        "nodes": [{}, {}],
+                        "runs": [{}],
+                    },
+                    "crop_clearance_analysis": {
+                        "request_id": str(request_id),
+                        "points": [{}, {}, {}, {}],
+                    },
+                },
+                error_message=None,
+                queued_at=datetime.now(timezone.utc),
+                started_at=datetime.now(timezone.utc),
+                completed_at=datetime.now(timezone.utc),
+            )
+
+    app.dependency_overrides[get_get_slope_analysis_job] = lambda: _GetSlopeAnalysisJob()
+
+    response = client.get(f"{_API_V1_PREFIX}/processes/slope-analysis/jobs/{request_id}")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["result_payload"]["longitudinal_spans"] == 3
+    assert data["result_payload"]["transversal_points"] == 2
+    assert data["result_payload"]["torsional_spans"] == 1
+    assert data["result_payload"]["structural_nodes"] == 2
+    assert data["result_payload"]["structural_runs"] == 1
+    assert data["result_payload"]["crop_clearance_points"] == 4
+    assert data["result_payload"]["analytics_available"] is True
+    assert "longitudinal_slope_analysis" not in data["result_payload"]
 
 
 def test_get_slope_analysis_results_returns_results(client) -> None:
